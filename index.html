@@ -145,6 +145,20 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .verdict { padding: 12px 14px; border-radius: 12px; display: grid; gap: 4px; }
 .verdict.ok { background: #1D3420; } .verdict.bad { background: #3A2219; }
 .verdict .v { font-weight: 700; }
+.verdict.late { background: #33301A; } .verdict.late .v { color: var(--thatch); }
+.choice.struck { cursor: default; opacity: .42; border-style: dashed; }
+.choice.struck .tx { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.choice.struck .mk { color: var(--bad); }
+.choice.struck:hover { border-color: inherit; }
+.choice.struck:active { transform: none; background: inherit; }
+.hintbox { margin: 8px 0 0; padding: 8px 12px; border-radius: 10px; background: #33301A; border-left: 3px solid var(--thatch); font-size: 14.5px; line-height: 1.6; animation: hintIn .35s ease-out; }
+.hintbox b { color: var(--thatch); margin-right: 8px; }
+@keyframes hintIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.end-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.end-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--panel-2); }
+.end-list b { display: block; font-family: var(--f-display); font-size: 16px; }
+.end-list small { display: block; color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 2px; }
+.end-list .btn { flex: none; }
 .verdict.ok .v { color: var(--ok); } .verdict.bad .v { color: var(--bad); }
 .verdict p { font-family: var(--f-story); font-size: 16.5px; line-height: 1.75; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
@@ -464,6 +478,7 @@ html { touch-action: manipulation; }
       opts: ["'성례구 뭐구 미처 자라야지!' 하고 점순이 키를 핑계 댄다", "올가을 추수가 끝나면 날을 잡자고 한다", "점순이가 싫다고 하니 기다리라고 한다"], answer: 0,
       after: [L("jangin", "angry", "이 자식아! 성례구 뭐구 미처 자라야지!"), N("자라야 한다는 것은 내가 아니라 장차 내 안해가 될 점순이의 키 말이다."), N("이래서 나는 애최 계약이 잘못된 걸 알았다. 기한을 딱 작정하고 일을 해야 할 것을, 덮어놓고 딸이 자라는 대로 성례를 시켜 주마 했으니……")],
       explain: "처음 계약은 '점순이가 자라면 성례를 시켜 준다'는 것이었다. 기한을 정하지 않았으니 장인은 키를 핑계로 얼마든지 성례를 미룰 수 있다.",
+      hint: "장인님이 성례를 미룰 때 늘 들먹이는 것은 점순이의 무엇이었나요?",
       origDid: "일을 더 하라거나 밥을 덜 먹으라는 말에는 할 말이 많지만, 점순이가 어리다는 말 앞에서는 그만 벙벙해지고 만다.",
       point: { h: "어수룩한 '나'가 들려주는 이야기", p: "어수룩하고 순박한 '나'가 직접 사건을 이야기한다. 독자는 '나'보다 먼저 장인의 속셈을 눈치채고, 그 차이에서 웃음이 생긴다." }
     },
@@ -483,6 +498,7 @@ html { touch-action: manipulation; }
       opts: ["밥을 남기지 말고 다 먹으라는 것", "장인에게 어서 성례를 시켜 달라고 조르라는 것", "아버지 몰래 둘이 고향으로 떠나자는 것"], answer: 1,
       after: [L("jeomsun", "angry", "성례시켜 달라지 뭘 어떡해."), N("되알지게 쏘아붙이고는 얼굴이 발개져서 산으로 그저 도망질을 친다."), N("봄이 되면 온갖 초목이 물이 오르고 싹이 튼다. 사람도 아마 그런가 부다. 며칠 새 부쩍(속으로) 자란 듯싶은 점순이가 여간 반가운 것이 아니다.")],
       explain: "점순이도 '나'와의 혼인을 바란다. 대놓고 말할 수 없으니 혼잣말처럼 '나'를 부추긴다. 이 말이 '나'가 장인에게 맞서는 계기가 된다.",
+      hint: "점순이는 얼굴이 빨개져서 도망쳤어요. 혼잣말처럼 던진 말 속에 숨은 마음은?",
       origDid: "고대 잘 내외하던 점순이의 말에 정신이 얼떨떨해진 '나'는 공중을 대고 '그럼 어떡해?' 하고 되묻는다.",
       point: { h: "제목 '봄·봄'의 봄", p: "봄은 모든 생명이 깨어나는 때다. '속으로' 자란 점순이, 점순이를 향한 '나'의 마음이 봄과 겹친다. 계절이 돌아 다시 봄이 오듯 성례를 둘러싼 다툼도 되풀이된다." }
     },
@@ -509,6 +525,7 @@ html { touch-action: manipulation; }
               L("jangin", "smug", "글쎄, 내가 안 하는 거냐, 그년이 안 크니까……."),
               N("이렇게 따져 나가면 늘 나만 밑지고 만다. 이번엔 안 된다 하고 대뜸 구장님한테로 단판 가자고 소맷자락을 내끌었다.")],
       explain: "장인에게 '나'는 새경 없이 부리는 일꾼이다. 일손이 가장 필요한 철에 '나'를 잃으면 농사를 망치니, 때리고 나서도 함부로 내쫓지 못한다.",
+      hint: "모내기 철에 일꾼이 집으로 가 버리면 누가 가장 손해일까요?",
       origDid: "'난 갈 테야유. 그동안 사경 쳐 내슈' 하고 버티다가, 이번엔 안 된다며 구장님한테 판단을 받으러 가자고 장인을 끌고 간다.",
       point: { h: "사위인가, 머슴인가", p: "'사위로 왔지 머슴 살러 왔느냐'는 장인의 말과 달리, 장인은 '나'를 사경 없는 머슴처럼 부린다. 데릴사위제가 노동력을 착취하는 데 쓰이는 모습이다." }
     },
@@ -534,6 +551,7 @@ html { touch-action: manipulation; }
               L("gujang", "stern", "빙장님 말씀이 올갈에는 열 일을 제치고라두 성례를 시켜 주겠다 하시니 좀 고마울 겐가. 군소리 말구 어서 가……."),
               N("여기에 그만 정신이 번쩍 났다. (뭉태 말은 구장님이 장인님에게 땅 두 마지기 얻어 부치니까 꾀였다지만, 난 그렇게 생각 않는다.)")],
       explain: "장인은 배 참봉 댁 마름이라 마을 사람들의 소작 땅을 쥐고 있다. 구장도 장인에게 땅을 얻어 부치니, 처음엔 '나'를 편드는 듯하다가 결국 장인 편에 선다.",
+      hint: "구장님은 누구에게 땅을 얻어 부치고 있을까요? 장인님의 직업(마름)을 떠올려 보세요.",
       origDid: "장인이 발등을 밟자 '빙장님'으로 말을 고친다. 구장의 '징역' 소리에 정신이 번쩍 나서 끽소리 없이 돌아와 모를 붓는다.",
       point: { h: "웃음 뒤의 1930년대 농촌", p: "지주를 대리하는 마름은 작인의 땅을 떼고 붙일 수 있었다. 마을 사람들이 욕을 먹으면서도 장인에게 굽실거리는 까닭이다. 해학 밑에 지주-마름-소작인 구조가 깔려 있다." }
     },
@@ -558,6 +576,7 @@ html { touch-action: manipulation; }
               N("셋째 딸이 인제 여섯 살, 적어도 열 살은 돼야 데릴사위를 할 테니 그동안은 나를 죽도록 부려 먹어야 된다는 것이다."),
               N("그래도 나는 뭉태 말을 전수히 곧이듣지는 않았다. 뭉태는 땅을 얻어 부치다가 떨어진 뒤로 장인님만 보면 공연히 으르렁거리니까.")],
       explain: "장인은 아들 없이 딸만 셋이라 딸들에게 차례로 데릴사위를 들여 일을 시킨다. '키'는 다음 데릴사위를 들일 때까지 일 잘하고 어수룩한 '나'를 붙잡아 두려는 핑계다.",
+      hint: "뭉태 말로는 장인님 딸이 몇이고, 막내딸은 몇 살이었나요?",
       origDid: "'나'는 뭉태의 말을 건성으로 듣는다. 뭉태가 장인에게 땅을 떼인 뒤로 장인을 미워한다는 걸 알기 때문이다.",
       point: { h: "뭉태는 왜 화를 낼까", p: "뭉태는 '나'를 위하는 척하지만, 장인에게 소작 땅을 떼인 원한이 섞여 있다. 같은 사건도 인물의 처지에 따라 다르게 말해진다." }
     },
@@ -576,6 +595,7 @@ html { touch-action: manipulation; }
       opts: ["구장님 말씀을 잘 따르라는 것", "징역 갈까 무서우니 그만두라는 것", "더 단단히 덤벼서 성례를 받아 내라는 것"], answer: 2,
       after: [L("jeomsun", "angry", "쇰을 잡아채지 그냥 둬, 이 바보야!"), N("또 얼굴이 빨개지면서 성을 내며 안으로 샐쭉하니 튀어 들어가 버렸다."), N("사실 이때만치 슬펐던 일이 또 있었는지 모른다. 내 안해 될 점순이가 나를 병신으로 본다면 참 신세는 따분하다.")],
       explain: "점순이는 '나'가 구장 앞에서 더 단단히 덤비지 못한 것이 답답하다. '바보'라는 말 속에는 어서 성례를 하고 싶은 마음이 들어 있다.",
+      hint: "점순이는 '나'가 구장님 앞에서 어떻게 했어야 한다고 생각할까요?",
       origDid: "'바보' 소리를 들은 '나'는 지게를 지고 일터로 가려다 도로 벗어 던지고, 바깥마당 공석 위에 드러눕는다.",
       point: { h: "익살스러운 말맛", p: "'쇰을 잡아채지 그냥 둬, 이 바보야!' 같은 사투리와 비속어가 '빙장님' 같은 존칭과 뒤섞이며 웃음을 만든다." }
     },
@@ -601,6 +621,7 @@ html { touch-action: manipulation; }
               L("na", "angry", "부려만 먹구 왜 성례 안 하지유!"),
               N("기어오르면 굴리고, 굴리면 기어오르고, 이러길 한 너덧 번을 했다.")],
       explain: "'나'가 수염을 잡아챈 건 화가 나서가 아니라 점순이 앞에서 바보로 보이기 싫어서다. 단순하고 순박한 '나'의 속마음이 웃음을 만든다.",
+      hint: "'나'가 소리를 '저기까지 잘 들리도록' 친 까닭은? 누가 엿보고 있었을까요?",
       origDid: "볼기짝을 맞자 벌떡 일어나 수염을 잡아채고, 점순이가 들으라고 '이걸 까셀라 부다!' 하고 소리친다.",
       point: { h: "과장된 희극적 상황", p: "기어오르면 굴리고 굴리면 기어오르기를 너덧 번. 사위와 장인이 벌이는 이 소동이 과장된 희극적 상황으로 웃음을 자아낸다." }
     },
@@ -629,6 +650,7 @@ html { touch-action: manipulation; }
               N("장인님이 지게막대기로 사뭇 내려조겼지만, 나는 피할 생각도 않고 그 속 알 수 없는 점순이의 얼굴만 멀거니 들여다보았다.")],
       afterAlt: [L("jeomsun", "angry", "……"), N("점순이는 기가 막힌다는 듯 나를 쳐다보더니, 아버지를 부축해 안으로 들어가 버렸다.")],
       explain: "점순이는 '나'를 부추겼지만 막상 아버지가 당하자 아버지 편을 든다. 이중적으로 보이지만 딸로서 자연스러운 반응이기도 하다. '나'의 기대가 뒤집히는 이 장면이 마지막 절정이다.",
+      hint: "아버지가 '할아버지!'를 외치며 당하는 모습을 본 딸이라면 누구 편을 들까요?",
       origDid: "'나'가 바짓가랑이를 잡아당기자 장인이 점순이를 부르고, 뛰어나온 점순이는 '나'의 귀를 잡아당기며 아버지 편을 든다.",
       point: { h: "'할아버지' 소리의 웃음", p: "다급해진 '나'는 장인을 '할아버지'라 부르고, 이번엔 장인이 '나'에게 '할아버지'라 외친다. 호칭이 뒤집히는 우스운 상황이 해학을 만든다." }
     }
@@ -638,7 +660,8 @@ html { touch-action: manipulation; }
   const BONUS = {
     q: "원작에서 '장인님이 터진 머리를 불솜으로 지져 주며 올갈엔 꼭 성례를 시켜 주마 하는 장면'은 어디에 놓여 있을까?",
     opts: ["소설의 맨 마지막", "바짓가랑이 싸움이 한창일 때, 점순이가 뛰어나오기 직전", "구장 댁 장면 바로 앞"], answer: 1,
-    explain: "원작은 바짓가랑이 싸움이 한창일 때 갑자기 그 뒤의 일(장인이 머리를 지져 주고 성례를 약속하는 장면)을 먼저 들려준다. 그러고는 다시 싸움으로 돌아가 점순이가 '나'의 귀를 잡아당기는 장면에서 끝난다. 교과서는 이를 '발단-전개-절정①-결말-절정②'로 정리한다. 시간 순서를 바꾼 덕분에 소설은 가장 우스운 순간에서 막을 내린다."
+    explain: "원작은 바짓가랑이 싸움이 한창일 때 갑자기 그 뒤의 일(장인이 머리를 지져 주고 성례를 약속하는 장면)을 먼저 들려준다. 그러고는 다시 싸움으로 돌아가 점순이가 '나'의 귀를 잡아당기는 장면에서 끝난다. 교과서는 이를 '발단-전개-절정①-결말-절정②'로 정리한다. 시간 순서를 바꾼 덕분에 소설은 가장 우스운 순간에서 막을 내린다.",
+    hint: "원작은 바짓가랑이 싸움 도중에 갑자기 '그 뒤의 일'을 먼저 들려줘요."
   };
 
   const G = { bae: "배짱", sim: "장인 심기", jeom: "점순 마음" };
@@ -732,12 +755,13 @@ html { touch-action: manipulation; }
   const CFG = window.BOMBOM_CONFIG || {};
   const RANK_URL = String(CFG.rankUrl || "").trim();
   const TEACHER_HASH = String(CFG.teacherHash || "93a83415c3624846b5920876ce765fe06053f0c2c4d3511eec2c81f2e3951262");
-  const PEN_WRONG = 60, PEN_MISS = 30;   // 틀린 눈치 1개당 60초, 못 찾은 조각 1개당 30초
+  const PEN_TRY = 30, PEN_MISS = 30;   // 눈치를 한 번 틀릴 때마다 30초(바로 시계에 더함), 못 찾은 조각 1개당 30초
 
   const fmt = sec => { sec = Math.max(0, Math.round(sec)); const m = Math.floor(sec / 60), s = sec % 60; return (m >= 60 ? Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0") : String(m).padStart(2, "0")) + ":" + String(s).padStart(2, "0"); };
   function runStats() {
-    const play = Math.round((S.playMs || 0) / 1000), wr = TOTAL_Q - S.nunchi, ms = PIECE_N - S.pieces.length;
-    return { play, wr, ms, rec: play + wr * PEN_WRONG + ms * PEN_MISS };
+    // play 에는 틀린 횟수 × 30초가 이미 들어 있다. 서버 계산식(play + wr×60 + ms×30)은 그대로 두고 wr 는 0으로 보낸다.
+    const play = Math.round((S.playMs || 0) / 1000), tries = S.wrong || 0, ms = PIECE_N - S.pieces.length;
+    return { play, real: Math.max(0, play - tries * PEN_TRY), tries, wr: 0, ms, rec: play + ms * PEN_MISS };
   }
 
   function rankGet(code) {
@@ -765,7 +789,9 @@ html { touch-action: manipulation; }
 
   function rankCardHTML() {
     const st = runStats(), rk = R.rank || {};
-    const pen = st.wr * PEN_WRONG + st.ms * PEN_MISS;
+    const parts = [];
+    if (st.tries) parts.push(`오답 ${st.tries}번 × ${PEN_TRY}초`);
+    if (st.ms) parts.push(`못 찾은 조각 ${st.ms}개 × ${PEN_MISS}초`);
     let line = "";
     if (!S.cls) line = `<p class="hint">이름 없이 시작해서 순위표에는 오르지 않아요.</p>`;
     else if (rk.state === "off") line = `<p class="hint">순위표가 아직 연결되지 않았어요. 선생님께 기록을 보여 주세요.</p>`;
@@ -775,7 +801,7 @@ html { touch-action: manipulation; }
       ${rk.best ? "" : `<p class="hint">이번 판보다 예전 기록(${fmt(rk.bestRec)})이 더 빨라서 순위에는 그 기록이 남아 있어요.</p>`}`;
     return `<div class="rank-card"><div class="eyebrow">나의 클리어 기록</div>
       <div class="rec-big">${fmt(st.rec)}</div>
-      <p class="rec-break">플레이 ${fmt(st.play)}${pen ? ` + 벌점 ${fmt(pen)} (틀린 눈치 ${st.wr}개 × ${PEN_WRONG}초, 못 찾은 조각 ${st.ms}개 × ${PEN_MISS}초)` : " · 벌점 없음"}</p>
+      <p class="rec-break">실제 시간 ${fmt(st.real)}${parts.length ? " + " + parts.join(" + ") : " · 더해진 시간 없음"}</p>
       ${line}
       <div class="row"><button class="btn ghost" type="button" id="board-btn">순위표 보기</button></div></div>`;
   }
@@ -799,10 +825,10 @@ html { touch-action: manipulation; }
     const body = rows.length ? rows.map((x, i) => {
       const me = S.cls && x.c === S.cls && x.no === S.no;
       const rr = B.cls ? i + 1 : x.r;
-      return `<tr class="${me ? "me" : ""}${rr <= 3 ? " top" + rr : ""}"><td class="rk">${rr}</td><td>${x.c}반 ${inTeacher ? x.no + "번 " : ""}${esc(x.n)}${me ? " <small>(나)</small>" : ""}</td><td class="tm">${fmt(x.rec)}</td><td class="sm">${fmt(x.play)} · 눈치 ${TOTAL_Q - x.wr}/${TOTAL_Q} · 조각 ${PIECE_N - x.ms}/${PIECE_N}${inTeacher ? " · " + (ENDN[x.end] || "-") : ""}</td></tr>`;
+      return `<tr class="${me ? "me" : ""}${rr <= 3 ? " top" + rr : ""}"><td class="rk">${rr}</td><td>${x.c}반 ${inTeacher ? x.no + "번 " : ""}${esc(x.n)}${me ? " <small>(나)</small>" : ""}</td><td class="tm">${fmt(x.rec)}</td><td class="sm">조각 ${PIECE_N - x.ms}/${PIECE_N}${inTeacher ? " · " + (ENDN[x.end] || "-") : ""}</td></tr>`;
     }).join("") : `<tr><td colspan="4" class="sm">아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!</td></tr>`;
     return `${tabs}<div class="board-wrap"><table class="board"><thead><tr><th>순위</th><th>이름</th><th>기록</th><th>내용</th></tr></thead><tbody>${body}</tbody></table></div>
-      <p class="hint">한 사람당 가장 빠른 기록 하나만 올라가요. 기록 = 플레이 시간 + 틀린 눈치 1개당 ${PEN_WRONG}초 + 못 찾은 조각 1개당 ${PEN_MISS}초.${inTeacher ? "" : " 이름 가운데 글자는 가려서 보여 줘요."}</p>
+      <p class="hint">한 사람당 가장 빠른 기록 하나만 올라가요. 기록 = 걸린 시간(눈치를 틀릴 때마다 ${PEN_TRY}초씩 더해짐) + 못 찾은 조각 1개당 ${PEN_MISS}초.${inTeacher ? "" : " 이름 가운데 글자는 가려서 보여 줘요."}</p>
       <div class="row"><button class="btn ghost" type="button" id="board-reload">새로고침</button></div>`;
   }
 
@@ -817,6 +843,8 @@ html { touch-action: manipulation; }
     ["밤낮 일만 하다 말 텐가", "마지막 장면에서 항복했거나 배짱이 50 미만"],
     ["보따리를 멘 데릴사위", "뭉태네 장면에서 '보따리를 싸 본다'를 고르고, 점순 마음이 40 미만"]
   ];
+  const ENDING_KEYS = ["orig", "meek", "left"];
+  const ENDING_COND = { orig: "나오는 조건 · " + ENDINGS_GUIDE[0][1], meek: "나오는 조건 · " + ENDINGS_GUIDE[1][1], left: "나오는 조건 · " + ENDINGS_GUIDE[2][1] };
   const TB_ANSWERS = [
     ["소설의 구성 단계 (교과서 159쪽)", [
       "<b>발단</b> 장인은 점순이가 자라면 '나'와 성례시키기로 했지만, 점순이의 키를 핑계로 약속을 지키지 않는다.",
@@ -870,7 +898,7 @@ html { touch-action: manipulation; }
       return `<li><b>${esc(PIECES[k].t)}</b> · ${esc(where)}</li>`;
     }).join("");
     const T = R.teacherTab || "qr";
-    const tabs = [["qr", "QR 공유"], ["key", "게임 정답"], ["tb", "교과서 모범답안"], ["board", "전체 순위"], ["setup", "운영 안내"]].map(([k, l]) => `<button type="button" class="${T === k ? "on" : ""}" data-ttab="${k}">${l}</button>`).join("");
+    const tabs = [["qr", "QR 공유"], ["end", "결말 보기"], ["key", "게임 정답"], ["tb", "교과서 모범답안"], ["board", "전체 순위"], ["setup", "운영 안내"]].map(([k, l]) => `<button type="button" class="${T === k ? "on" : ""}" data-ttab="${k}">${l}</button>`).join("");
     let body = "";
     if (T === "qr") body = `<div class="qr-wrap">${qrPanel(false)}
         <p class="hint">학생들이 휴대폰 카메라로 비추면 바로 게임이 열려요. 앱 설치나 로그인은 필요 없어요.</p>
@@ -878,13 +906,15 @@ html { touch-action: manipulation; }
         ${R.copied ? `<p class="hint">주소를 복사했어요.</p>` : R.copyFail ? `<p class="hint">자동 복사가 막혀 있어요. 위 주소를 길게 눌러 복사해 주세요.</p>` : ""}</div>`;
     if (T === "key") body = `<ol class="akey">${scenes}<li><div class="ak-h"><b>마지막. 이야기의 순서</b></div><p><span class="tag ok">눈치 정답</span>${NUM[BONUS.answer]} ${esc(BONUS.opts[BONUS.answer])}</p><p class="sm">${esc(BONUS.explain)}</p></li></ol>
       <h3 class="menu-h">원작 조각 ${PIECE_N}개 위치</h3><ul class="plain">${pieces}</ul>
-      <h3 class="menu-h">결말 조건</h3><ul class="plain">${ENDINGS_GUIDE.map(([a, b]) => `<li><b>${esc(a)}</b> · ${esc(b)}</li>`).join("")}</ul>
-      <p class="hint">숨은 보상(「봄·봄」 노래): 눈치 ${TOTAL_Q}개를 모두 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 열립니다.</p>`;
+      <h3 class="menu-h">결말 조건</h3><ul class="plain">${ENDINGS_GUIDE.map(([a, b], i) => `<li><b>${esc(a)}</b> · ${esc(b)} <button class="link-btn" type="button" data-pend="${ENDING_KEYS[i]}">결말 보기 ▸</button></li>`).join("")}</ul>
+      <p class="hint">눈치는 틀려도 ${PEN_TRY}초만 늘고, 틀린 답이 지워지고 힌트가 나와 결국 모두 정답으로 넘어가요.<br>숨은 보상(「봄·봄」 노래): 눈치 ${TOTAL_Q}개를 모두 한 번에 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 열립니다.</p>`;
+    if (T === "end") body = `<p class="hint">학생 화면과 똑같이 마지막 장면이 연출돼요. 진행 중이던 판이나 기록에는 영향이 없어요.</p>
+      <ul class="end-list">${ENDING_KEYS.map(k => { const e = endingData(k); return `<li><div><b>${esc(e.title)}</b><small>${esc(ENDING_COND[k])}</small></div><button class="btn${k === "orig" ? "" : " ghost"}" type="button" data-pend="${k}">결말 보기</button></li>`; }).join("")}</ul>`;
     if (T === "tb") body = TB_ANSWERS.map(([h, items]) => `<h3 class="menu-h">${h}</h3><ul class="plain">${items.map(x => `<li>${x}</li>`).join("")}</ul>`).join("") +
       `<p class="hint">교과서 활동을 바탕으로 정리한 예시 답안입니다. 학생 답은 취지가 맞으면 인정해 주세요.</p>`;
     if (T === "board") body = `<p class="hint">선생님 화면에서는 이름이 가려지지 않고 번호와 결말도 함께 보여요.</p>` + boardHTML(true);
     if (T === "setup") body = `<ul class="plain">
-        <li><b>순위 기준</b> 처음 장면에 들어선 때부터 결말 화면까지 걸린 시간(창을 닫은 동안은 빼고 셈) + 틀린 눈치 1개당 ${PEN_WRONG}초 + 못 찾은 조각 1개당 ${PEN_MISS}초. 빨리 누르기만 하면 오히려 손해예요.</li>
+        <li><b>순위 기준</b> 처음 장면에 들어선 때부터 결말 화면까지 걸린 시간(창을 닫은 동안은 빼고 셈) + 못 찾은 조각 1개당 ${PEN_MISS}초. 눈치를 틀리면 그때마다 ${PEN_TRY}초가 시계에 바로 더해지고, 틀린 답은 지워지고 힌트가 나와서 누구나 정답을 거쳐 결말까지 갈 수 있어요. 아무거나 막 누르면 오히려 손해예요.</li>
         <li><b>한 사람 한 기록</b> 반·번호·이름이 같으면 가장 빠른 기록 하나만 순위에 남아요. 다시 하기로 기록을 줄일 수 있어요.</li>
         <li><b>기록 지우기</b> 순위표 구글 시트의 '기록' 탭에서 줄을 지우면 됩니다. 새 수업을 시작할 때 비우고 시작하세요.</li>
         <li><b>순위표 연결</b> ${RANK_URL ? "연결되어 있어요." : "아직 연결되지 않았어요. 저장소의 apps-script 폴더 안내대로 Apps Script를 배포한 뒤 config.js에 주소를 넣어 주세요."}</li>
@@ -975,10 +1005,10 @@ html { touch-action: manipulation; }
   /* ================= 상태 ================= */
   function fresh(name, who) {
     who = who || {};
-    return { cls: who.cls || 0, no: who.no || 0, nm: who.nm || "", playMs: 0, submitted: false, runId: null, mode: "title", name: name || "", sc: 0, g: { bae: 20, sim: 60, jeom: 50 }, nunchi: 0, origCount: 0, pieces: [], flags: {}, log: [], px: 2.5, pz: 0, choice: null, pred: null, lastFx: null, lastBonus: 0, bonus: null, endingKey: null, tips: true };
+    return { cls: who.cls || 0, no: who.no || 0, nm: who.nm || "", playMs: 0, submitted: false, runId: null, mode: "title", name: name || "", sc: 0, g: { bae: 20, sim: 60, jeom: 50 }, nunchi: 0, wrong: 0, tries: [], origCount: 0, pieces: [], flags: {}, log: [], px: 2.5, pz: 0, choice: null, pred: null, lastFx: null, lastBonus: 0, bonus: null, endingKey: null, tips: true };
   }
   let S = fresh();
-  const R = { lines: [], li: 0, speaker: null, cont: null, typing: false, typer: null, near: null, mash: null, help: false, t: 0, lastAdv: 0, mashDone: null, stick: null, celebrated: false, view: null, board: null, rank: null, teacherCode: "", teacherTab: "key", teacherErr: "", secShown: -1 };
+  const R = { lines: [], li: 0, speaker: null, cont: null, typing: false, typer: null, near: null, mash: null, help: false, t: 0, lastAdv: 0, mashDone: null, stick: null, celebrated: false, view: null, board: null, rank: null, teacherCode: "", teacherTab: "key", teacherErr: "", secShown: -1, preview: null };
   const keepWho = () => fresh(S.name, { cls: S.cls, no: S.no, nm: S.nm });
   const SONG_URL = "https://youtu.be/tuH5b63FK7k";
   const isPerfect = () => S.nunchi >= TOTAL_Q && S.pieces.length >= PIECE_N;
@@ -991,7 +1021,7 @@ html { touch-action: manipulation; }
   }
   function save() {
     try {
-      if (["free", "inter", "result", "bonus", "final"].includes(S.mode)) {
+      if (!R.preview && ["free", "inter", "result", "bonus", "final"].includes(S.mode)) {
         if (P) { S.px = P.x; S.pz = P.z; }
         localStorage.setItem(SAVE_KEY, JSON.stringify(S));
       }
@@ -1640,21 +1670,50 @@ html { touch-action: manipulation; }
   }
   function pickPred(i) {
     if (S.mode !== "predict") return;
-    const D = SCENES[S.sc], ok = i === D.answer;
-    S.pred = i; if (ok) S.nunchi++;
-    sfx(ok ? "ok" : "bad");
-    const real = applyFx({ bae: ok ? 5 : -5 }); S.lastBonus = real.bae;
+    const D = SCENES[S.sc];
+    S.tries = S.tries || [];
+    if (S.tries.includes(i)) return;
+    if (i !== D.answer) { missTry(i); return; }
+    const first = S.tries.length === 0;
+    S.pred = i; if (first) S.nunchi++;
+    sfx("ok");
+    const real = applyFx({ bae: first ? 5 : 0 }); S.lastBonus = real.bae;
     const a = D.actions[S.choice];
-    S.log.push({ title: D.title, time: D.time, act: a.t, orig: !!a.orig, surrender: !!a.surrender, ok });
+    S.log.push({ title: D.title, time: D.time, act: a.t, orig: !!a.orig, surrender: !!a.surrender, ok: first, tries: S.tries.length + 1 });
+    S.lastTries = S.tries.length; S.tries = [];
     S.mode = "verdict"; renderUI(); renderHUD();
   }
+  /* 틀리면 시간만 30초 늘고, 고른 답은 지워지고, 힌트가 나온다. 맞힐 때까지 계속. */
+  function missTry(i) {
+    S.tries.push(i); S.wrong = (S.wrong || 0) + 1;
+    if (!R.preview) S.playMs = (S.playMs || 0) + PEN_TRY * 1000;
+    sfx("bad"); try { navigator.vibrate && navigator.vibrate([30, 40, 30]); } catch (e) {}
+    toast(`눈치가 빗나갔다 · +${PEN_TRY}초 · 힌트를 보고 다시 골라 보세요`, 2600);
+    R.secShown = -1; renderHUD(); renderUI(); keepPenalty();
+  }
+  /* 새로고침으로 벌점을 지우지 못하게, 저장본의 시간도 함께 늘려 둔다 */
+  function keepPenalty() {
+    if (R.preview) return;
+    try { const sv = loadSave(); if (sv && sv.runId === S.runId && sv.sc === S.sc) { sv.playMs = Math.max(sv.playMs || 0, S.playMs); sv.wrong = S.wrong; localStorage.setItem(SAVE_KEY, JSON.stringify(sv)); } } catch (e) {}
+    save();
+  }
+  function triesNote(n) { return n ? `${n + 1}번 만에 맞혔다 · +${fmt(n * PEN_TRY)}` : "한 번에 맞혔다!"; }
   function afterVerdict() {
     if (S.mode !== "verdict") return;
     const D = SCENES[S.sc], a = D.actions[S.choice];
     if (S.sc === 6) P.lie = false;
     play(a.surrender && D.afterAlt ? D.afterAlt : D.after, () => { R.partner = null; S.mode = "result"; renderUI(); });
   }
-  function endScene() { if (S.sc < NS - 1) { S.mode = "inter"; renderUI(); } else { S.mode = "bonus"; S.bonus = null; renderUI(); } }
+  function pickBonus(i) {
+    if (S.mode !== "bonus" || S.bonus !== null) return;
+    S.tries = S.tries || [];
+    if (S.tries.includes(i)) return;
+    if (i !== BONUS.answer) { missTry(i); return; }
+    S.bonusTries = S.tries.length; S.tries = [];
+    S.bonus = i; if (!S.bonusTries) S.nunchi++;
+    sfx("ok"); renderHUD(); renderUI(); save();
+  }
+  function endScene() { if (S.sc < NS - 1) { S.mode = "inter"; renderUI(); } else { S.mode = "bonus"; S.bonus = null; S.tries = []; renderUI(); } }
   function startScene(n) {
     S.sc = n; S.mode = "free"; S.choice = null; S.pred = null; S.lastFx = null; R.near = null; R.pending = null; R.partner = null; R.speaker = null;
     const st = T(SCENES[n].start[0], SCENES[n].start[1]);
@@ -1668,12 +1727,17 @@ html { touch-action: manipulation; }
 
   function ending() {
     const lastLog = S.log[NS - 1] || {};
-    if (S.flags.left && S.g.jeom < 40) return {
+    if (S.flags.left && S.g.jeom < 40) return endingData("left");
+    if (!lastLog.surrender && S.g.bae >= 50) return endingData("orig");
+    return endingData("meek");
+  }
+  function endingData(key) {
+    if (key === "left") return {
       key: "left", title: "보따리를 멘 데릴사위",
       lines: [N("새벽, 나는 보따리를 메고 고개를 넘었다. 삼 년 일곱 달 일한 사경은 한 푼도 못 받았다."), N("장가를 들러 갔다가 쫓겨 왔다고 고향에서는 손가락질을 받겠지."), N("장인님은 아마 네 번째 데릴사위를 들일 것이다.")],
       note: "원작의 '나'는 떠나지 않습니다. 원작에는 장가를 들러 갔다가 쫓겨 왔다고 손가락질받을까 봐 차마 집에 못 간다는 대목이 있습니다. 왜 떠나지 못했을까요?"
     };
-    if (!lastLog.surrender && S.g.bae >= 50) return {
+    if (key === "orig") return {
       key: "orig", title: "올갈엔 꼭 성례를",
       lines: [N("내가 머리가 터지도록 매를 얻어맞은 것이 이 때문이다."),
               N("그러나 여기가 또한 우리 장인님이 유달리 착한 곳이다. 터진 머리를 불솜으로 손수 지져 주고, 호주머니에 히연 한 봉을 넣어 준다."),
@@ -1689,19 +1753,41 @@ html { touch-action: manipulation; }
       note: "원작의 '나'는 어수룩해도 끝내 몸으로 부딪칩니다. 그 덕분에 이야기가 웃음으로 터집니다. 참기만 하는 '나'였다면 이 소설은 어떤 이야기가 되었을까요?"
     };
   }
+  /* 선생님용 결말 미리보기: 진행 중인 판은 그대로 두고 결말 장면만 보여 준다 */
+  function previewEnding(key) {
+    if (!R.preview) R.preview = { S: JSON.stringify(S), px: P.x, pz: P.z };
+    R.view = null; R.help = false; R.dockMin = false;
+    S = fresh(S.name, { cls: S.cls, no: S.no, nm: S.nm });
+    S.sc = NS - 1; S.flags = { out8: true }; S.mode = "free"; S.tips = false;
+    setupScene(NS - 1);
+    const e = endingData(key); S.endingKey = e.key; R.previewKey = e.key;
+    const p = T(400, 340); P.x = p.x; P.z = p.z; P.lie = false; P.path = [];
+    if (ENT.jangin && ENT.jangin.active) R.partner = "jangin";
+    renderHUD(); play(e.lines, () => { R.partner = null; S.mode = "pview"; renderHUD(); renderUI(); });
+  }
+  function endPreview() {
+    if (!R.preview) return;
+    const b = R.preview; R.preview = null;
+    try { S = Object.assign(fresh(), JSON.parse(b.S)); } catch (e) { S = fresh(); }
+    if (S.mode === "dialog" || S.mode === "mash") S.mode = "free";
+    setupScene(Math.min(S.sc, NS - 1)); P.x = b.px; P.z = b.pz; P.path = []; R.partner = null; R.near = null;
+    R.view = "teacher"; R.teacherTab = "end";
+    renderHUD(); renderUI();
+  }
   function grade(n) { return n >= 9 ? "봉필이 속을 꿰뚫은 독자" : n >= 7 ? "눈치 빠른 데릴사위" : n >= 4 ? "한 박자 늦는 '나'" : "삼 년 일곱 달째 속는 중"; }
 
   /* ================= 화면 ================= */
   function renderHUD() {
     const sc = SCENES[Math.min(S.sc, NS - 1)];
     let main = "봄·봄 마을", sub = "김유정 「봄·봄」";
-    if (S.mode !== "title") {
+    if (R.preview) { main = "결말 미리보기"; sub = "선생님용 · 눌러서 나가기"; }
+    else if (S.mode !== "title") {
       if (["bonus", "final"].includes(S.mode) || S.endingKey) { main = "마무리"; sub = S.mode === "final" ? "나의 결말" : `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span> · 거의 다 왔어요`; }
       else { main = `${S.sc + 1}/${NS} · ${sc.title}`; sub = `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span> · 눈치 ${S.nunchi}/${TOTAL_Q} · 조각 ${S.pieces.length}/${PIECE_N}`; }
     }
     hudEl.innerHTML = `<button class="chip-btn" type="button" id="chip-btn" aria-label="메뉴 열기"><b>${esc(main)}</b><small>${sub}</small></button>
       <div class="tools">${S.mode === "title" ? "" : `<button class="icon-btn" type="button" id="rot-btn" aria-label="시점 돌리기">↻</button>`}<button class="icon-btn" type="button" id="help-btn">메뉴</button></div>`;
-    const openMenu = () => { R.help = true; renderUI(); };
+    const openMenu = () => { if (R.preview) { endPreview(); return; } R.help = true; renderUI(); };
     $("chip-btn").addEventListener("click", openMenu); $("help-btn").addEventListener("click", openMenu);
     const rb = $("rot-btn"); if (rb) rb.addEventListener("click", () => { yawGoal -= Math.PI / 4; sfx("pick"); });
   }
@@ -1751,6 +1837,15 @@ html { touch-action: manipulation; }
   function sheetHTML() {
     const m = S.mode;
     if (R.view) return viewHTML();
+    if (m === "pview") {
+      const e = endingData(R.previewKey), others = ENDING_KEYS.filter(k => k !== e.key);
+      return `<div class="eyebrow">선생님용 · 결말 미리보기</div><h2 class="end-title">${esc(e.title)}</h2>
+        <p class="hint">${esc(ENDING_COND[e.key])}</p>
+        <div class="notes"><div class="note"><span class="t">이 결말 읽기</span><p>${esc(e.note)}</p></div></div>
+        <div class="row">${others.map(k => `<button class="btn ghost" type="button" data-pend="${k}">${esc(endingData(k).title)} 보기</button>`).join("")}
+          <button class="btn ghost" type="button" data-pend="${e.key}">다시 보기</button>
+          <button class="btn" type="button" id="pview-out">교사 화면으로</button></div>`;
+    }
     if (R.help) {
       const sc = SCENES[Math.min(S.sc, NS - 1)];
       const gs = Object.keys(G).map(k => `<div class="g g-${k}"><div class="k"><span>${G[k]}</span><b>${S.g[k]}</b></div><div class="bar"><i style="width:${S.g[k]}%"></i></div></div>`).join("");
@@ -1761,7 +1856,7 @@ html { touch-action: manipulation; }
         <div class="gauges-big">${gs}</div>
         <div class="menu-marks"><span>눈치 <span class="dots">${nd}</span> <b>${S.nunchi}/${TOTAL_Q}</b></span><span>원작 조각 <b>${S.pieces.length}/${PIECE_N}</b></span></div>
         <ul class="piece-list">${pl}</ul>
-        <p class="hint">숨은 보상: 눈치를 모두 맞히고 원작 조각을 모두 모으면 「봄·봄」 노래가 열려요.</p>`;
+        <p class="hint">숨은 보상: 눈치를 모두 한 번에 맞히고 원작 조각을 모두 모으면 「봄·봄」 노래가 열려요.</p>`;
       return `${status}
         <div class="row"><button class="btn" type="button" id="close-help">게임으로 돌아가기</button><button class="btn ghost" type="button" id="snd-toggle">${soundOn ? "소리 끄기" : "소리 켜기"}</button></div>
         <div class="title-links"><button type="button" class="link-btn" id="board-open">🏆 순위표 보기</button><button type="button" class="link-btn" id="teacher-open">선생님용</button></div>
@@ -1771,7 +1866,7 @@ html { touch-action: manipulation; }
           <li><b>교재</b> 공통국어2(비상교육, 박영민) 4단원 「봄·봄」 수록 부분에 맞춰 8장면을 구성했습니다. 대사는 원작 문장을 살렸습니다.</li>
           <li><b>시간</b> 한 판 20분 안팎. 남은 시간은 결말별 비교 토론</li>
           <li><b>연결되는 활동</b> 갈등의 원인과 인물의 성격, 제목 '봄·봄'의 의미, 지주-마름-소작인 구조와 데릴사위제, 해학의 요소, 발단-전개-절정①-결말-절정② 구성</li>
-          <li><b>숨은 보상</b> 눈치 ${TOTAL_Q}개를 모두 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 결과 화면에 「봄·봄」 노래 링크가 열립니다.</li>
+          <li><b>숨은 보상</b> 눈치 ${TOTAL_Q}개를 모두 한 번에 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 결과 화면에 「봄·봄」 노래 링크가 열립니다.</li>
         </ul></details>`;
     }
     if (m === "title") {
@@ -1815,31 +1910,32 @@ html { touch-action: manipulation; }
     if (m === "bonus") {
       if (S.bonus === null) return `<div class="dlg static"><div class="portrait">${portrait("na", "dazed", true)}</div><div>
           <div class="eyebrow">마지막 눈치 · 이야기의 순서</div>
-          <p class="ask" style="margin-top:4px">${esc(BONUS.q)}<small>게임은 시간 순서대로 진행했지만, 원작은 다르답니다. 한 번만 고를 수 있어요.</small></p>
-          <div class="choices">${BONUS.opts.map((o, i) => `<button class="choice" type="button" data-bonus="${i}"><span class="mk">${NUM[i]}</span><span class="tx">${esc(o)}</span></button>`).join("")}</div></div></div>`;
-      const ok = S.bonus === BONUS.answer;
-      return `<div class="verdict ${ok ? "ok" : "bad"}"><span class="v">${ok ? "눈치가 맞았다!" : "눈치가 빗나갔다……"} · 정답 ${NUM[BONUS.answer]}</span><p>${esc(BONUS.explain)}</p></div>
+          <p class="ask" style="margin-top:4px">${esc(BONUS.q)}<small>게임은 시간 순서대로 진행했지만, 원작은 다르답니다. ${tryLine()}</small></p>
+          ${hintBox(BONUS.hint)}
+          <div class="choices">${choiceBtns(BONUS.opts, "bonus")}</div></div></div>`;
+      const ok = !S.bonusTries;
+      return `<div class="verdict ${ok ? "ok" : "late"}"><span class="v">${ok ? "눈치가 맞았다! 한 번에 맞혔어요" : esc(triesNote(S.bonusTries))} · 정답 ${NUM[BONUS.answer]}</span><p>${esc(BONUS.explain)}</p></div>
         <div class="row"><button class="btn" type="button" id="end-btn">나의 결말 보기</button></div>`;
     }
     if (m === "final") {
       const e = ending(), sim = S.g.sim;
       const simLine = sim <= 25 ? `장인님 심기는 ${sim}까지 떨어졌습니다. 그런데도 장인님은 '나'를 내쫓지 않았습니다. 왜일까요? (뭉태네 장면을 떠올려 보세요.)` : `장인님 심기 ${sim}. 장인님은 끝까지 성례 날짜를 정해 주지 않았습니다.`;
-      const rows = S.log.map(l => `<tr><td>${esc(l.title)}</td><td>${esc(l.act)}${l.orig ? ` <span class="y">· 원작과 같음</span>` : ""}</td><td class="${l.ok ? "y" : "n2"}"><b>${l.ok ? "적중" : "빗나감"}</b></td></tr>`).join("");
-      const bOk = S.bonus === BONUS.answer;
+      const rows = S.log.map(l => `<tr><td>${esc(l.title)}</td><td>${esc(l.act)}${l.orig ? ` <span class="y">· 원작과 같음</span>` : ""}</td><td class="${l.ok ? "y" : "n2"}"><b>${l.ok ? "한 번에" : (l.tries || 2) + "번 만에"}</b></td></tr>`).join("");
+      const bOk = !S.bonusTries;
       const pcs = S.pieces.length ? S.pieces.map(k => `<li><b>${esc(PIECES[k].t)}</b> · ${esc(PIECES[k].p)}</li>`).join("") : `<li>찾은 조각이 없다. 다음 판에는 마을을 둘러보자.</li>`;
       return `<div class="eyebrow">${S.name ? esc(S.name) + "의 " : ""}결말</div>
         <h2 class="end-title">${esc(e.title)}</h2>
         ${rankCardHTML()}
-        ${isPerfect() ? `<div class="reward on"><div class="eyebrow">숨은 보상이 열렸어요</div><h3>「봄·봄」 노래</h3><p>눈치를 모두 맞히고 원작 조각까지 모두 모았어요. 봉필이 속을 꿰뚫은 독자에게 주는 선물이에요.</p><a class="btn" href="${SONG_URL}" target="_blank" rel="noopener">노래 들으러 가기</a></div>` : ""}
+        ${isPerfect() ? `<div class="reward on"><div class="eyebrow">숨은 보상이 열렸어요</div><h3>「봄·봄」 노래</h3><p>눈치를 모두 한 번에 맞히고 원작 조각까지 모두 모았어요. 봉필이 속을 꿰뚫은 독자에게 주는 선물이에요.</p><a class="btn" href="${SONG_URL}" target="_blank" rel="noopener">노래 들으러 가기</a></div>` : ""}
         <div class="notes"><div class="note"><span class="t">이 결말 읽기</span><p>${esc(e.note)}</p></div><div class="note"><span class="t">장인님은 왜</span><p>${esc(simLine)}</p></div></div>
         <div class="stats">
-          <div class="stat"><div class="k">눈치</div><div class="n">${S.nunchi} / ${TOTAL_Q}</div><div class="s">${grade(S.nunchi)}</div></div>
+          <div class="stat"><div class="k">한 번에 맞힌 눈치</div><div class="n">${S.nunchi} / ${TOTAL_Q}</div><div class="s">${grade(S.nunchi)}</div></div>
           <div class="stat"><div class="k">원작과 같은 선택</div><div class="n">${S.origCount} / ${NS}</div><div class="s">원작의 '나'와 얼마나 닮았나</div></div>
           <div class="stat"><div class="k">원작 조각</div><div class="n">${S.pieces.length} / ${PIECE_N}</div><div class="s">마을에서 찾은 단서</div></div>
         </div>
         ${isPerfect() ? "" : `<div class="reward"><div class="eyebrow">숨은 보상 · 잠김</div><p>눈치 ${S.nunchi}/${TOTAL_Q}, 원작 조각 ${S.pieces.length}/${PIECE_N}. 모두 채우면 「봄·봄」 노래가 열려요. 다시 하기로 도전해 보세요.</p></div>`}
         <div class="log"><table><thead><tr><th>장면</th><th>나의 선택</th><th>눈치</th></tr></thead><tbody>${rows}
-          <tr><td>이야기의 순서</td><td>원작의 구성</td><td class="${bOk ? "y" : "n2"}"><b>${bOk ? "적중" : "빗나감"}</b></td></tr></tbody></table></div>
+          <tr><td>이야기의 순서</td><td>원작의 구성</td><td class="${bOk ? "y" : "n2"}"><b>${bOk ? "한 번에" : (S.bonusTries + 1) + "번 만에"}</b></td></tr></tbody></table></div>
         <div class="pieces"><h3>모은 원작 조각</h3><ul>${pcs}</ul></div>
         <div class="discuss"><h3>함께 이야기해 볼 것</h3><ol>
           <li>'나', 장인, 점순이는 각각 무엇 때문에 갈등할까?</li>
@@ -1852,6 +1948,12 @@ html { touch-action: manipulation; }
     return "";
   }
 
+  function tryLine() { const n = (S.tries || []).length; return n ? `틀린 답은 지워졌어요. 지금까지 +${fmt(n * PEN_TRY)}` : `작품을 떠올려 고르세요. 틀리면 ${PEN_TRY}초가 늘고 다시 고를 수 있어요.`; }
+  function hintBox(h) { return (S.tries || []).length && h ? `<p class="hintbox"><b>힌트</b>${esc(h)}</p>` : ""; }
+  function choiceBtns(opts, kind) {
+    const tr = S.tries || [];
+    return opts.map((o, i) => { const x = tr.includes(i); return `<button class="choice${x ? " struck" : ""}" type="button" data-${kind}="${i}"${x ? " disabled aria-disabled=\"true\"" : ""}><span class="mk">${x ? "✕" : NUM[i]}</span><span class="tx">${esc(o)}</span></button>`; }).join("");
+  }
   function dockHTML() {
     const m = S.mode;
     if (m === "free") {
@@ -1876,13 +1978,14 @@ html { touch-action: manipulation; }
     if (m === "predict") {
       const D = SCENES[S.sc];
       return `<div class="dlg static"><div class="portrait">${portrait(D.predWho, "normal", true)}</div><div>
-        <p class="ask">눈치 보기 · ${esc(D.q)}<small>작품을 떠올려 고르세요. 한 번 고르면 바꿀 수 없어요.</small></p>
-        <div class="choices">${D.opts.map((o, i) => `<button class="choice" type="button" data-pred="${i}"><span class="mk">${NUM[i]}</span><span class="tx">${esc(o)}</span></button>`).join("")}</div></div></div>`;
+        <p class="ask">눈치 보기 · ${esc(D.q)}<small>${tryLine()}</small></p>
+        ${hintBox(D.hint)}
+        <div class="choices">${choiceBtns(D.opts, "pred")}</div></div></div>`;
     }
     if (m === "verdict") {
-      const D = SCENES[S.sc], ok = S.pred === D.answer;
-      return `<div class="verdict ${ok ? "ok" : "bad"}"><span class="v">${ok ? "눈치가 맞았다!" : "눈치가 빗나갔다……"}</span><p>정답 ${NUM[D.answer]} ${esc(D.opts[D.answer])}</p></div>
-        ${fxChips(null, `<span class="chip ${ok ? "up" : "down"}">배짱 ${S.lastBonus >= 0 ? "+" : ""}${S.lastBonus}</span>`)}
+      const D = SCENES[S.sc], ok = !S.lastTries;
+      return `<div class="verdict ${ok ? "ok" : "late"}"><span class="v">${ok ? "눈치가 맞았다! 한 번에 맞혔어요" : esc(triesNote(S.lastTries))}</span><p>정답 ${NUM[D.answer]} ${esc(D.opts[D.answer])}</p></div>
+        ${ok ? fxChips(null, `<span class="chip up">배짱 +${S.lastBonus}</span>`) : ""}
         <div class="row"><button class="btn" type="button" id="cont-btn">무슨 일이 벌어지는지 보기</button></div>`;
     }
     if (m === "mash") return `<div class="mash"><div class="eyebrow">버티기</div>
@@ -1942,8 +2045,10 @@ html { touch-action: manipulation; }
     on("go-btn", () => { const main = ENT[SCENES[S.sc].npcs.find(n => n.main).id]; R.pending = main.id; walkTo(P, main.x, main.z, false); });
     dockEl.querySelectorAll("[data-act]").forEach(b => b.addEventListener("click", () => pickAction(+b.dataset.act)));
     dockEl.querySelectorAll("[data-pred]").forEach(b => b.addEventListener("click", () => pickPred(+b.dataset.pred)));
-    sheetEl.querySelectorAll("[data-bonus]").forEach(b => b.addEventListener("click", () => { if (S.bonus !== null) return; S.bonus = +b.dataset.bonus; const ok = S.bonus === BONUS.answer; if (ok) S.nunchi++; sfx(ok ? "ok" : "bad"); renderHUD(); renderUI(); }));
+    sheetEl.querySelectorAll("[data-bonus]").forEach(b => b.addEventListener("click", () => pickBonus(+b.dataset.bonus)));
     on("cont-btn", afterVerdict);
+    sheetEl.querySelectorAll("[data-pend]").forEach(b => b.addEventListener("click", () => previewEnding(b.dataset.pend)));
+    on("pview-out", endPreview);
     const mb = $("mash-btn");
     if (mb) { mb.addEventListener("pointerdown", ev => { ev.preventDefault(); mashTap(); }); mb.addEventListener("click", ev => { if (ev.detail === 0) mashTap(); }); }
     on("sc-btn", endScene);
@@ -2075,7 +2180,7 @@ html { touch-action: manipulation; }
   let last = 0;
   function frame(ts) {
     const real = last ? (ts - last) / 1000 : 0, dt = Math.min(0.05, real); last = ts;
-    if (S.mode !== "title" && S.mode !== "final" && !S.submitted) {
+    if (S.mode !== "title" && S.mode !== "final" && !S.submitted && !R.preview) {
       S.playMs = (S.playMs || 0) + Math.min(real, 1) * 1000;
       const sec = Math.floor(S.playMs / 1000);
       if (sec !== R.secShown) { R.secShown = sec; const el = $("hud-time"); if (el) el.textContent = fmt(sec); }
