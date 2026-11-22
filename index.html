@@ -267,6 +267,55 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 ul.plain { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 8px; font-size: 15px; line-height: 1.65; }
 ul.plain b { color: var(--thatch); }
 @media (max-width: 700px) { .who { grid-template-columns: 80px 76px minmax(0, 1fr); flex-basis: 100%; } .rec-big { font-size: 34px; } }
+
+/* QR 공유 */
+.qr-wrap { margin-top: 14px; display: grid; justify-items: center; text-align: center; }
+.qr-box { width: min(260px, 70vw); aspect-ratio: 1; background: #FFFFFF; border-radius: 14px; padding: 6px; }
+.qr-box svg { width: 100%; height: 100%; display: block; }
+.qr-url { margin-top: 8px; font-size: 15px; font-weight: 700; color: var(--thatch); word-break: break-all; -webkit-user-select: text; user-select: text; }
+.qr-wrap .row { width: 100%; }
+.sheet.qrfull { background: #FFFFFF; z-index: 6; }
+.sheet.qrfull .sheet-card { background: #FFFFFF; border: 0; box-shadow: none; max-width: 900px; color: #111; }
+.qr-full { display: grid; justify-items: center; text-align: center; gap: 10px; }
+.qr-full h2 { font-size: clamp(26px, 5vw, 48px); color: #111; }
+.qr-full > p { font-size: clamp(16px, 2.6vw, 24px); color: #444; }
+.qr-box.big { width: min(72vh, 86vw); padding: 0; }
+.qr-full .qr-url { color: #111; font-size: clamp(16px, 2.8vw, 28px); }
+
+/* 휴대폰: 대화창이 마을을 덜 가리게 */
+html { touch-action: manipulation; }
+.dock-min { pointer-events: auto; align-self: flex-end; margin: 0 4px 6px 0; appearance: none; border: 1px solid var(--line); background: rgba(19, 27, 22, .9); color: var(--ink); font-size: 13.5px; font-weight: 700; border-radius: 999px; padding: 6px 14px; min-height: 38px; cursor: pointer; }
+.dock-pill { pointer-events: auto; align-self: center; appearance: none; border: 1px solid var(--thatch); background: rgba(19, 27, 22, .95); color: var(--ink); font-weight: 700; font-size: 15px; border-radius: 999px; padding: 10px 22px; min-height: 46px; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); cursor: pointer; }
+@media (max-width: 700px) {
+  .dock { top: auto; height: 48%; padding-bottom: 8px; }
+  .dock-card { padding: 10px 12px 12px; border-radius: 16px; }
+  .dlg { grid-template-columns: 46px minmax(0, 1fr); gap: 10px; min-height: 0; }
+  .portrait svg { width: 46px; height: 46px; border-radius: 10px; }
+  .nameplate { font-size: 13px; margin-bottom: 2px; }
+  .text { font-size: 16px; line-height: 1.65; min-height: 3.3em; }
+  .more { margin-top: 4px; padding: 5px 12px; font-size: 13px; }
+  .ask { font-size: 15px; }
+  .ask small { font-size: 12.5px; }
+  .choices { gap: 6px; margin-top: 8px; }
+  .choice { min-height: 46px; padding: 8px 12px; font-size: 15px; }
+  .choice .tx small { font-size: 12.5px; }
+  .verdict { padding: 10px 12px; }
+  .freebar .btn { min-height: 46px; }
+  .dlg.static .portrait { display: none; }
+  .dlg.static { grid-template-columns: minmax(0, 1fr); }
+}
+/* 가로로 눕힌 휴대폰: 대화창을 오른쪽에 */
+@media (orientation: landscape) and (max-height: 520px) {
+  .dock { left: auto; right: 0; top: 60px; width: min(48%, 460px); height: auto; justify-content: flex-end; }
+  .dock-card { max-height: 100%; }
+  .dlg.static .portrait { display: none; }
+  .dlg.static { grid-template-columns: minmax(0, 1fr); }
+  .dlg { grid-template-columns: 46px minmax(0, 1fr); gap: 10px; min-height: 0; }
+  .portrait svg { width: 46px; height: 46px; }
+  .text { font-size: 15.5px; line-height: 1.6; }
+  .choice { min-height: 44px; padding: 7px 12px; font-size: 14.5px; }
+  .gauges, .marks { display: none; }
+}
 </style>
 
 <div class="app" id="app">
@@ -595,6 +644,90 @@ ul.plain b { color: var(--thatch); }
   const G = { bae: "배짱", sim: "장인 심기", jeom: "점순 마음" };
   const MK = ["ㄱ", "ㄴ", "ㄷ"], NUM = ["①", "②", "③"];
   const TOTAL_Q = NS + 1;
+  /* ================= QR 코드 (바이트 모드, 오류 정정 M, 1~10형) ================= */
+  const QR = (function () {
+    const ECC_PER = [0, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26];
+    const BLOCKS = [0, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5];
+    const rawModules = v => { let r = (16 * v + 128) * v + 64; if (v >= 2) { const n = Math.floor(v / 7) + 2; r -= (25 * n - 10) * n - 55; if (v >= 7) r -= 36; } return r; };
+    const dataCw = v => Math.floor(rawModules(v) / 8) - ECC_PER[v] * BLOCKS[v];
+    const gmul = (x, y) => { let z = 0; for (let i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11D); z ^= ((y >>> i) & 1) * x; } return z & 255; };
+    function divisor(deg) { const r = new Array(deg).fill(0); r[deg - 1] = 1; let root = 1; for (let i = 0; i < deg; i++) { for (let j = 0; j < deg; j++) { r[j] = gmul(r[j], root); if (j + 1 < deg) r[j] ^= r[j + 1]; } root = gmul(root, 2); } return r; }
+    function rsRem(data, div) { const r = new Array(div.length).fill(0); for (const b of data) { const f = b ^ r.shift(); r.push(0); for (let i = 0; i < div.length; i++) r[i] ^= gmul(div[i], f); } return r; }
+    const bit = (x, i) => ((x >>> i) & 1) !== 0;
+    function alignPos(v, size) { if (v === 1) return []; const n = Math.floor(v / 7) + 2, step = Math.ceil((v * 4 + 4) / (n * 2 - 2)) * 2, r = [6]; for (let p = size - 7; r.length < n; p -= step) r.splice(1, 0, p); return r; }
+    const MASKS = [(x, y) => (x + y) % 2 === 0, (x, y) => y % 2 === 0, (x, y) => x % 3 === 0, (x, y) => (x + y) % 3 === 0, (x, y) => (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0, (x, y) => x * y % 2 + x * y % 3 === 0, (x, y) => (x * y % 2 + x * y % 3) % 2 === 0, (x, y) => ((x + y) % 2 + x * y % 3) % 2 === 0];
+
+    function encode(text) {
+      const bytes = Array.from(new TextEncoder().encode(text));
+      let v = 1;
+      for (; v <= 10; v++) if (4 + (v < 10 ? 8 : 16) + bytes.length * 8 <= dataCw(v) * 8) break;
+      if (v > 10) throw new Error("QR: 너무 긴 주소");
+      const size = v * 4 + 17, cap = dataCw(v) * 8;
+      const bits = []; const put = (val, n) => { for (let i = n - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
+      put(4, 4); put(bytes.length, v < 10 ? 8 : 16); bytes.forEach(b => put(b, 8));
+      put(0, Math.min(4, cap - bits.length)); put(0, (8 - bits.length % 8) % 8);
+      for (let p = 0xEC; bits.length < cap; p ^= 0xEC ^ 0x11) put(p, 8);
+      const data = []; for (let i = 0; i < bits.length; i += 8) { let b = 0; for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j]; data.push(b); }
+      // 블록 나누기와 오류 정정
+      const nb = BLOCKS[v], ecl = ECC_PER[v], raw = Math.floor(rawModules(v) / 8), nShort = nb - raw % nb, shortLen = Math.floor(raw / nb), div = divisor(ecl), blocks = [];
+      for (let i = 0, k = 0; i < nb; i++) { const d = data.slice(k, k + shortLen - ecl + (i < nShort ? 0 : 1)); k += d.length; const e = rsRem(d, div); if (i < nShort) d.push(0); blocks.push(d.concat(e)); }
+      const cw = []; for (let i = 0; i < blocks[0].length; i++) blocks.forEach((b, j) => { if (i !== shortLen - ecl || j >= nShort) cw.push(b[i]); });
+      // 기능 패턴
+      const M = [], F = []; for (let y = 0; y < size; y++) { M.push(new Array(size).fill(false)); F.push(new Array(size).fill(false)); }
+      const set = (x, y, d) => { M[y][x] = d; F[y][x] = true; };
+      for (let i = 0; i < size; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+      for (const [cx, cy] of [[3, 3], [size - 4, 3], [3, size - 4]]) for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) { const x = cx + dx, y = cy + dy, d = Math.max(Math.abs(dx), Math.abs(dy)); if (x >= 0 && y >= 0 && x < size && y < size) set(x, y, d !== 2 && d !== 4); }
+      const ap = alignPos(v, size), na = ap.length;
+      for (let i = 0; i < na; i++) for (let j = 0; j < na; j++) { if ((i === 0 && j === 0) || (i === 0 && j === na - 1) || (i === na - 1 && j === 0)) continue; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) set(ap[i] + dx, ap[j] + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1); }
+      const drawFormat = mask => {
+        const d = (0 << 3) | mask; let r = d; for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+        const b = ((d << 10) | r) ^ 0x5412;
+        for (let i = 0; i <= 5; i++) set(8, i, bit(b, i));
+        set(8, 7, bit(b, 6)); set(8, 8, bit(b, 7)); set(7, 8, bit(b, 8));
+        for (let i = 9; i < 15; i++) set(14 - i, 8, bit(b, i));
+        for (let i = 0; i < 8; i++) set(size - 1 - i, 8, bit(b, i));
+        for (let i = 8; i < 15; i++) set(8, size - 15 + i, bit(b, i));
+        set(8, size - 8, true);
+      };
+      drawFormat(0);
+      if (v >= 7) { let r = v; for (let i = 0; i < 12; i++) r = (r << 1) ^ ((r >>> 11) * 0x1F25); const b = (v << 12) | r; for (let i = 0; i < 18; i++) { const a = size - 11 + i % 3, c = Math.floor(i / 3); set(a, c, bit(b, i)); set(c, a, bit(b, i)); } }
+      // 데이터 놓기
+      let k = 0;
+      for (let right = size - 1; right >= 1; right -= 2) {
+        if (right === 6) right = 5;
+        for (let vert = 0; vert < size; vert++) for (let j = 0; j < 2; j++) {
+          const x = right - j, up = ((right + 1) & 2) === 0, y = up ? size - 1 - vert : vert;
+          if (!F[y][x] && k < cw.length * 8) { M[y][x] = bit(cw[k >>> 3], 7 - (k & 7)); k++; }
+        }
+      }
+      // 마스크 고르기 (간단한 벌점: 같은 색 줄, 2×2 덩어리, 밝기 균형)
+      const score = G => {
+        let p = 0, dark = 0;
+        for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+          if (G[y][x]) dark++;
+          if (x < size - 1 && y < size - 1 && G[y][x] === G[y][x + 1] && G[y][x] === G[y + 1][x] && G[y][x] === G[y + 1][x + 1]) p += 3;
+        }
+        for (let a = 0; a < size; a++) for (const row of [true, false]) { let run = 1; for (let b = 1; b < size; b++) { const c = row ? G[a][b] === G[a][b - 1] : G[b][a] === G[b - 1][a]; if (c) { run++; if (run === 5) p += 3; else if (run > 5) p++; } else run = 1; } }
+        return p + Math.floor(Math.abs(dark * 20 - size * size * 10) / (size * size)) * 10;
+      };
+      let best = null, bestP = Infinity;
+      for (let m = 0; m < 8; m++) {
+        drawFormat(m);
+        const G = M.map((row, y) => row.map((d, x) => F[y][x] ? d : d !== MASKS[m](x, y)));
+        const p = score(G); if (p < bestP) { bestP = p; best = { m, G }; }
+      }
+      drawFormat(best.m);
+      return best.G.map((row, y) => row.map((d, x) => F[y][x] ? M[y][x] : d));
+    }
+    function svg(text, label) {
+      const G = encode(text), n = G.length, q = 4, W = n + q * 2;
+      let d = "";
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (G[y][x]) d += `M${x + q} ${y + q}h1v1h-1z`;
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" aria-label="${label || "QR 코드"}" shape-rendering="crispEdges"><rect width="${W}" height="${W}" fill="#FFFFFF"/><path d="${d}" fill="#111111"/></svg>`;
+    }
+    return { encode, svg };
+  })();
+
   /* ================= 순위표 · 교사용 ================= */
   const CFG = window.BOMBOM_CONFIG || {};
   const RANK_URL = String(CFG.rankUrl || "").trim();
@@ -736,9 +869,13 @@ ul.plain b { color: var(--thatch); }
       const where = o ? OBJ_WHERE[o.id] : `${CH[who].name}에게 말 걸기 (${whereFound(who)})`;
       return `<li><b>${esc(PIECES[k].t)}</b> · ${esc(where)}</li>`;
     }).join("");
-    const T = R.teacherTab || "key";
-    const tabs = [["key", "게임 정답"], ["tb", "교과서 모범답안"], ["board", "전체 순위"], ["setup", "운영 안내"]].map(([k, l]) => `<button type="button" class="${T === k ? "on" : ""}" data-ttab="${k}">${l}</button>`).join("");
+    const T = R.teacherTab || "qr";
+    const tabs = [["qr", "QR 공유"], ["key", "게임 정답"], ["tb", "교과서 모범답안"], ["board", "전체 순위"], ["setup", "운영 안내"]].map(([k, l]) => `<button type="button" class="${T === k ? "on" : ""}" data-ttab="${k}">${l}</button>`).join("");
     let body = "";
+    if (T === "qr") body = `<div class="qr-wrap">${qrPanel(false)}
+        <p class="hint">학생들이 휴대폰 카메라로 비추면 바로 게임이 열려요. 앱 설치나 로그인은 필요 없어요.</p>
+        <div class="row"><button class="btn" type="button" id="qr-big">화면에 크게 띄우기</button><button class="btn ghost" type="button" id="qr-copy">주소 복사</button></div>
+        ${R.copied ? `<p class="hint">주소를 복사했어요.</p>` : R.copyFail ? `<p class="hint">자동 복사가 막혀 있어요. 위 주소를 길게 눌러 복사해 주세요.</p>` : ""}</div>`;
     if (T === "key") body = `<ol class="akey">${scenes}<li><div class="ak-h"><b>마지막. 이야기의 순서</b></div><p><span class="tag ok">눈치 정답</span>${NUM[BONUS.answer]} ${esc(BONUS.opts[BONUS.answer])}</p><p class="sm">${esc(BONUS.explain)}</p></li></ol>
       <h3 class="menu-h">원작 조각 ${PIECE_N}개 위치</h3><ul class="plain">${pieces}</ul>
       <h3 class="menu-h">결말 조건</h3><ul class="plain">${ENDINGS_GUIDE.map(([a, b]) => `<li><b>${esc(a)}</b> · ${esc(b)}</li>`).join("")}</ul>
@@ -757,7 +894,19 @@ ul.plain b { color: var(--thatch); }
       <div class="row"><button class="btn ghost" type="button" id="view-close">닫기</button><button class="btn ghost" type="button" id="teacher-out">교사 화면 나가기</button></div>`;
   }
 
+  const DEFAULT_SHARE = "https://yjb8634-sudo.github.io/bombom/";
+  function shareUrl() {
+    if (CFG.shareUrl) return CFG.shareUrl;
+    try { if (/^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname)) return location.origin + location.pathname.replace(/index\.html$/, ""); } catch (e) {}
+    return DEFAULT_SHARE;
+  }
+  function qrPanel(big) {
+    const u = shareUrl();
+    let q = ""; try { q = QR.svg(u, "게임 주소 QR 코드"); } catch (e) { q = ""; }
+    return `<div class="qr-box${big ? " big" : ""}">${q}</div><p class="qr-url">${esc(u.replace(/^https:\/\//, ""))}</p>`;
+  }
   function viewHTML() {
+    if (R.view === "qr") return `<div class="qr-full"><h2>봉필네 데릴사위</h2><p>휴대폰 카메라로 비추면 게임이 열려요</p>${qrPanel(true)}<button class="btn" type="button" id="qr-close">닫기</button></div>`;
     if (R.view === "board") return `<div class="eyebrow">봉필네 데릴사위</div><h2 class="menu-title">가장 빨리 클리어한 사람</h2>${boardHTML(false)}
       <div class="row"><button class="btn" type="button" id="view-close">돌아가기</button></div>`;
     if (R.view === "teacher") return teacherHTML();
@@ -771,6 +920,13 @@ ul.plain b { color: var(--thatch); }
     on("teacher-open", () => { R.view = "teacher"; R.teacherErr = ""; renderUI(); });
     on("board-reload", () => loadBoard(R.view === "teacher"));
     on("resend-btn", submitRun);
+    on("qr-big", () => { R.view = "qr"; renderUI(); });
+    on("qr-close", () => { R.view = "teacher"; renderUI(); });
+    on("qr-copy", () => {
+      const u = shareUrl(), done = () => { R.copied = true; renderUI(); setTimeout(() => { R.copied = false; if (R.view === "teacher") renderUI(); }, 2500); };
+      const fail = () => { R.copyFail = true; renderUI(); };
+      try { navigator.clipboard.writeText(u).then(done, fail); } catch (e) { fail(); }
+    });
     on("teacher-out", () => { R.teacherCode = ""; R.view = null; renderUI(); });
     sheetEl.querySelectorAll("[data-cls]").forEach(b => b.addEventListener("click", () => { R.board.cls = +b.dataset.cls; renderUI(); }));
     sheetEl.querySelectorAll("[data-ttab]").forEach(b => b.addEventListener("click", () => {
@@ -784,7 +940,7 @@ ul.plain b { color: var(--thatch); }
       tf.addEventListener("submit", async ev => {
         ev.preventDefault();
         const code = inp.value.trim(), h = await sha256(code);
-        if (h && h === TEACHER_HASH) { R.teacherCode = code; R.teacherErr = ""; R.teacherTab = "key"; }
+        if (h && h === TEACHER_HASH) { R.teacherCode = code; R.teacherErr = ""; R.teacherTab = "qr"; }
         else R.teacherErr = h ? "코드가 맞지 않아요." : "이 브라우저에서는 교사 화면을 열 수 없어요. 주소가 https로 시작하는지 확인해 주세요.";
         renderUI();
       });
@@ -1277,9 +1433,13 @@ ul.plain b { color: var(--thatch); }
     const ar = appEl.getBoundingClientRect(), topPx = hudEl.getBoundingClientRect().bottom - ar.top + 6;
     const card = dockEl.hidden ? null : dockEl.firstElementChild;
     const botPx = card ? card.getBoundingClientRect().top - ar.top - 6 : VH;
-    const mid = (topPx + Math.max(topPx + 60, botPx)) / 2;
-    const shift = (VH / 2 - mid) * vh / VH;
-    cam.left = -vw / 2; cam.right = vw / 2; cam.top = vh / 2 - shift; cam.bottom = -vh / 2 - shift;
+    let mid = (topPx + Math.max(topPx + 60, botPx)) / 2, midX = VW / 2;
+    if (card) {
+      const cr = card.getBoundingClientRect();
+      if (cr.left - ar.left > VW * 0.3) { midX = (cr.left - ar.left) / 2; mid = (topPx + VH) / 2; }   // 옆에 붙은 대화창
+    }
+    const shift = (VH / 2 - mid) * vh / VH, shiftX = (VW / 2 - midX) * vw / VW;
+    cam.left = -vw / 2 + shiftX; cam.right = vw / 2 + shiftX; cam.top = vh / 2 - shift; cam.bottom = -vh / 2 - shift;
     cam.updateProjectionMatrix();
     const cy = Math.cos(PITCH);
     cam.position.set(camT.x + Math.sin(yaw) * cy * 60, Math.sin(PITCH) * 60, camT.z + Math.cos(yaw) * cy * 60);
@@ -1734,9 +1894,14 @@ ul.plain b { color: var(--thatch); }
 
   function renderUI() {
     const d = dockHTML(), s = sheetHTML();
-    dockEl.innerHTML = d ? `<div class="dock-card${S.mode === "free" ? " compact" : ""}">${d}</div>` : "";
+    const talkMode = ["dialog", "choice", "predict", "verdict"].includes(S.mode);
+    if (!talkMode) R.dockMin = false;
+    dockEl.className = "dock" + (talkMode ? " talk" : "");
+    dockEl.innerHTML = !d ? "" : (talkMode && R.dockMin)
+      ? `<button class="dock-pill" type="button" id="dock-expand">▴ 대화창 열기</button>`
+      : `${talkMode ? `<button class="dock-min" type="button" id="dock-min">▾ 마을 보기</button>` : ""}<div class="dock-card${S.mode === "free" ? " compact" : ""}">${d}</div>`;
     dockEl.hidden = !d;
-    sheetEl.className = "sheet" + (S.mode === "title" && !R.help && !R.view ? " title" : "");
+    sheetEl.className = "sheet" + (S.mode === "title" && !R.help && !R.view ? " title" : "") + (R.view === "qr" ? " qrfull" : "");
     sheetEl.innerHTML = s ? `<div class="sheet-card">${s}</div>` : "";
     sheetEl.hidden = !s;
     if (P) P.nm.textContent = S.name || "나";
@@ -1764,6 +1929,8 @@ ul.plain b { color: var(--thatch); }
       if (S.mode === "final" && !S.submitted) submitRun();
     });
     bindView();
+    on("dock-min", ev => { ev.stopPropagation(); R.dockMin = true; renderUI(); });
+    on("dock-expand", () => { R.dockMin = false; renderUI(); });
     on("close-help", () => { R.help = false; renderUI(); });
     on("snd-toggle", () => { soundOn = !soundOn; try { localStorage.setItem("bombom-sound", soundOn ? "on" : "off"); } catch (e) {} if (soundOn) sfx("pick"); renderUI(); });
     if (S.mode === "dialog" && !R.help) {
@@ -1845,6 +2012,7 @@ ul.plain b { color: var(--thatch); }
   }
   function onTap(cx, cy) {
     audio();
+    if (R.dockMin) { R.dockMin = false; renderUI(); return; }
     if (S.mode === "dialog") { advance(); return; }
     if (S.mode === "mash") return;
     if (S.mode !== "free") return;
