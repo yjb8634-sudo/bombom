@@ -221,6 +221,52 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
   .toast.show, .lb .bang { animation: none; }
   .g .bar i { transition: none; }
 }
+
+/* 반·번호·이름 */
+.who-form .who-label { width: 100%; font-size: 13px; color: var(--muted); }
+.who { display: grid; grid-template-columns: 88px 84px minmax(0, 1fr); gap: 8px; flex: 1 1 320px; min-width: 0; }
+.who select, .who input, .t-input { min-width: 0; width: 100%; padding: 12px; font: inherit; font-size: 16px; min-height: 50px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2); color: var(--ink); -webkit-user-select: text; user-select: text; }
+.t-input { flex: 1 1 200px; letter-spacing: .2em; }
+.title-links { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
+.link-btn { appearance: none; border: 0; background: none; color: var(--thatch); font-weight: 700; font-size: 14.5px; padding: 8px 2px; min-height: 40px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.hint.err { color: var(--bad); }
+
+/* 나의 기록 */
+.rank-card { margin-top: 14px; border-radius: 14px; padding: 14px 16px; background: var(--panel-2); border: 1px solid var(--thatch); }
+.rec-big { font-family: var(--f-display); font-size: 40px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.rec-break { font-size: 13.5px; color: var(--muted); margin-top: 4px; }
+.rank-now { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.rank-now div { background: var(--panel); border-radius: 12px; padding: 8px 12px; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.rank-now span { font-size: 12.5px; color: var(--muted); width: 100%; }
+.rank-now b { font-family: var(--f-display); font-size: 28px; color: var(--thatch); font-variant-numeric: tabular-nums; }
+.rank-now small { color: var(--muted); }
+
+/* 순위표 */
+.seg { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.seg button { appearance: none; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); border-radius: 999px; padding: 6px 14px; min-height: 38px; font-size: 14px; cursor: pointer; }
+.seg button.on { background: var(--thatch); color: #161D18; border-color: var(--thatch); font-weight: 700; }
+.board-wrap { margin-top: 12px; overflow-x: auto; max-height: 52vh; overflow-y: auto; border-radius: 12px; border: 1px solid var(--line); }
+.board { border-collapse: collapse; width: 100%; min-width: 440px; font-size: 14.5px; }
+.board th { position: sticky; top: 0; background: var(--panel); text-align: left; font-size: 12px; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.board td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.board .rk { font-family: var(--f-display); font-weight: 800; width: 48px; font-variant-numeric: tabular-nums; }
+.board .tm { font-family: var(--f-display); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.board .sm, .sm { font-size: 12.5px; color: var(--muted); }
+.board tr.top1 .rk { color: #F2D04E; } .board tr.top2 .rk { color: #D6DCE4; } .board tr.top3 .rk { color: #D79A63; }
+.board tr.me td { background: rgba(214, 174, 85, .16); }
+
+/* 교사용 정답 */
+.akey { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.akey li { background: var(--panel-2); border-radius: 12px; padding: 12px 14px; display: grid; gap: 6px; }
+.ak-h { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ak-h span { font-size: 12.5px; color: var(--muted); }
+.akey p { font-size: 15px; line-height: 1.6; }
+.tag { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--line); color: var(--ink); margin-right: 8px; vertical-align: 1px; }
+.tag.ok { background: var(--ok); color: #10200F; }
+ul.plain { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 8px; font-size: 15px; line-height: 1.65; }
+ul.plain b { color: var(--thatch); }
+@media (max-width: 700px) { .who { grid-template-columns: 80px 76px minmax(0, 1fr); flex-basis: 100%; } .rec-big { font-size: 34px; } }
 </style>
 
 <div class="app" id="app">
@@ -232,6 +278,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
   <div class="sheet" id="sheet" hidden></div>
 </div>
 
+<script src="config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function () {
@@ -548,6 +595,202 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
   const G = { bae: "배짱", sim: "장인 심기", jeom: "점순 마음" };
   const MK = ["ㄱ", "ㄴ", "ㄷ"], NUM = ["①", "②", "③"];
   const TOTAL_Q = NS + 1;
+  /* ================= 순위표 · 교사용 ================= */
+  const CFG = window.BOMBOM_CONFIG || {};
+  const RANK_URL = String(CFG.rankUrl || "").trim();
+  const TEACHER_HASH = String(CFG.teacherHash || "93a83415c3624846b5920876ce765fe06053f0c2c4d3511eec2c81f2e3951262");
+  const PEN_WRONG = 60, PEN_MISS = 30;   // 틀린 눈치 1개당 60초, 못 찾은 조각 1개당 30초
+
+  const fmt = sec => { sec = Math.max(0, Math.round(sec)); const m = Math.floor(sec / 60), s = sec % 60; return (m >= 60 ? Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0") : String(m).padStart(2, "0")) + ":" + String(s).padStart(2, "0"); };
+  function runStats() {
+    const play = Math.round((S.playMs || 0) / 1000), wr = TOTAL_Q - S.nunchi, ms = PIECE_N - S.pieces.length;
+    return { play, wr, ms, rec: play + wr * PEN_WRONG + ms * PEN_MISS };
+  }
+
+  function rankGet(code) {
+    if (!RANK_URL) return Promise.reject(new Error("off"));
+    const u = RANK_URL + (RANK_URL.includes("?") ? "&" : "?") + "a=top" + (code ? "&code=" + encodeURIComponent(code) : "") + "&_=" + Date.now();
+    return fetch(u, { redirect: "follow", credentials: "omit" }).then(r => r.json()).then(j => { if (!j || !j.ok) throw new Error((j && j.e) || "서버 오류"); return j; });
+  }
+  function rankPost(body) {
+    if (!RANK_URL) return Promise.reject(new Error("off"));
+    return fetch(RANK_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body), redirect: "follow", credentials: "omit" })
+      .then(r => r.json()).then(j => { if (!j || !j.ok) throw new Error((j && j.e) || "서버 오류"); return j.v; });
+  }
+
+  /* 결말에 도착하면 기록을 한 번 보냅니다. 실패하면 저장해 두었다가 다시 엽니다. */
+  function submitRun() {
+    if (!S.cls || !S.nm || S.submitted) return;
+    if (!RANK_URL) { R.rank = { state: "off" }; return; }
+    const st = runStats();
+    S.runId = S.runId || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+    R.rank = { state: "sending" }; renderUI();
+    rankPost({ a: "submit", c: S.cls, no: S.no, n: S.nm, play: st.play, wr: st.wr, ms: st.ms, end: S.endingKey || "", run: S.runId })
+      .then(v => { S.submitted = true; R.rank = Object.assign({ state: "ok" }, v); save(); if (S.mode === "final") renderUI(); })
+      .catch(e => { R.rank = { state: "fail", msg: e && e.message && !/fetch|network|JSON|Load failed/i.test(e.message) ? e.message : "" }; if (S.mode === "final") renderUI(); });
+  }
+
+  function rankCardHTML() {
+    const st = runStats(), rk = R.rank || {};
+    const pen = st.wr * PEN_WRONG + st.ms * PEN_MISS;
+    let line = "";
+    if (!S.cls) line = `<p class="hint">이름 없이 시작해서 순위표에는 오르지 않아요.</p>`;
+    else if (rk.state === "off") line = `<p class="hint">순위표가 아직 연결되지 않았어요. 선생님께 기록을 보여 주세요.</p>`;
+    else if (rk.state === "sending") line = `<p class="hint">기록을 순위표에 올리는 중…</p>`;
+    else if (rk.state === "fail") line = `<p class="hint">기록을 올리지 못했어요. ${rk.msg ? esc(rk.msg) : "인터넷 연결을 확인하고 다시 눌러 주세요."}</p><div class="row"><button class="btn ghost" type="button" id="resend-btn">기록 다시 올리기</button></div>`;
+    else if (rk.state === "ok") line = `<div class="rank-now"><div><span>전체</span><b>${rk.rank}등</b><small>/ ${rk.total}명</small></div><div><span>${S.cls}반</span><b>${rk.cRank}등</b><small>/ ${rk.cTotal}명</small></div></div>
+      ${rk.best ? "" : `<p class="hint">이번 판보다 예전 기록(${fmt(rk.bestRec)})이 더 빨라서 순위에는 그 기록이 남아 있어요.</p>`}`;
+    return `<div class="rank-card"><div class="eyebrow">나의 클리어 기록</div>
+      <div class="rec-big">${fmt(st.rec)}</div>
+      <p class="rec-break">플레이 ${fmt(st.play)}${pen ? ` + 벌점 ${fmt(pen)} (틀린 눈치 ${st.wr}개 × ${PEN_WRONG}초, 못 찾은 조각 ${st.ms}개 × ${PEN_MISS}초)` : " · 벌점 없음"}</p>
+      ${line}
+      <div class="row"><button class="btn ghost" type="button" id="board-btn">순위표 보기</button></div></div>`;
+  }
+
+  /* 순위표 화면 */
+  function loadBoard(teacher) {
+    R.board = { state: "loading", list: [], teacher: !!teacher, cls: R.board ? R.board.cls : (S.cls || 0) };
+    renderUI();
+    rankGet(teacher ? R.teacherCode : "").then(j => { R.board.state = "ok"; R.board.list = j.v || []; R.board.at = Date.now(); renderUI(); })
+      .catch(e => { R.board.state = e && e.message === "off" ? "off" : "fail"; renderUI(); });
+  }
+  function boardHTML(inTeacher) {
+    const B = R.board || { state: "loading", list: [] };
+    if (B.state === "off") return `<p class="hint">순위표가 아직 연결되지 않았어요. ${inTeacher ? "아래 '순위표 연결 방법'을 참고해 주세요." : "선생님이 연결하면 여기에 순위가 나와요."}</p>`;
+    if (B.state === "loading") return `<p class="hint">순위표를 불러오는 중…</p>`;
+    if (B.state === "fail") return `<p class="hint">순위표를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</p><div class="row"><button class="btn ghost" type="button" id="board-reload">다시 불러오기</button></div>`;
+    const classes = [...new Set(B.list.map(x => x.c))].sort((a, b) => a - b);
+    const rows = B.list.map((x, i) => Object.assign({ r: i + 1 }, x)).filter(x => !B.cls || x.c === B.cls);
+    const tabs = `<div class="seg" role="tablist"><button type="button" class="${!B.cls ? "on" : ""}" data-cls="0">전체</button>${classes.map(c => `<button type="button" class="${B.cls === c ? "on" : ""}" data-cls="${c}">${c}반</button>`).join("")}</div>`;
+    const ENDN = { orig: "원작", meek: "참기만", left: "떠남" };
+    const body = rows.length ? rows.map((x, i) => {
+      const me = S.cls && x.c === S.cls && x.no === S.no;
+      const rr = B.cls ? i + 1 : x.r;
+      return `<tr class="${me ? "me" : ""}${rr <= 3 ? " top" + rr : ""}"><td class="rk">${rr}</td><td>${x.c}반 ${inTeacher ? x.no + "번 " : ""}${esc(x.n)}${me ? " <small>(나)</small>" : ""}</td><td class="tm">${fmt(x.rec)}</td><td class="sm">${fmt(x.play)} · 눈치 ${TOTAL_Q - x.wr}/${TOTAL_Q} · 조각 ${PIECE_N - x.ms}/${PIECE_N}${inTeacher ? " · " + (ENDN[x.end] || "-") : ""}</td></tr>`;
+    }).join("") : `<tr><td colspan="4" class="sm">아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!</td></tr>`;
+    return `${tabs}<div class="board-wrap"><table class="board"><thead><tr><th>순위</th><th>이름</th><th>기록</th><th>내용</th></tr></thead><tbody>${body}</tbody></table></div>
+      <p class="hint">한 사람당 가장 빠른 기록 하나만 올라가요. 기록 = 플레이 시간 + 틀린 눈치 1개당 ${PEN_WRONG}초 + 못 찾은 조각 1개당 ${PEN_MISS}초.${inTeacher ? "" : " 이름 가운데 글자는 가려서 보여 줘요."}</p>
+      <div class="row"><button class="btn ghost" type="button" id="board-reload">새로고침</button></div>`;
+  }
+
+  /* 교사용 */
+  async function sha256(s) {
+    if (!(window.crypto && crypto.subtle)) return "";
+    const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+  const ENDINGS_GUIDE = [
+    ["올갈엔 꼭 성례를 (원작 결말)", "마지막 장면에서 항복하지 않고, 결말을 볼 때 배짱이 50 이상"],
+    ["밤낮 일만 하다 말 텐가", "마지막 장면에서 항복했거나 배짱이 50 미만"],
+    ["보따리를 멘 데릴사위", "뭉태네 장면에서 '보따리를 싸 본다'를 고르고, 점순 마음이 40 미만"]
+  ];
+  const TB_ANSWERS = [
+    ["소설의 구성 단계 (교과서 159쪽)", [
+      "<b>발단</b> 장인은 점순이가 자라면 '나'와 성례시키기로 했지만, 점순이의 키를 핑계로 약속을 지키지 않는다.",
+      "<b>전개</b> 점순이의 부추김에 '나'는 배가 아프다며 일을 거부하고 장인과 구장에게 판단을 받으러 가지만, 구장은 장인 편을 들어 '나'를 돌려보낸다. 뭉태에게서 장인의 속셈을 듣는다.",
+      "<b>절정①</b> 점순이에게 '바보' 소리를 들은 '나'는 일을 거부하고 드러누웠다가, 장인과 수염을 잡아채고 바짓가랑이를 움켜쥐는 몸싸움을 벌인다.",
+      "<b>결말</b> 장인은 터진 '나'의 머리를 지져 주며 올가을에 성례를 시켜 주겠다고 약속하고, '나'는 감격하여 다시 일하러 간다.",
+      "<b>절정②</b> '나'와 장인의 싸움에서 장인이 불리해지자 점순이가 장인의 편을 들고, 이에 '나'는 망연자실한다.",
+      "결말이 절정② 앞에 놓인 역순행적 구성이라, 소설은 가장 우스운 장면에서 끝난다."]],
+    ["갈등의 원인 (160쪽 1-(1))", [
+      "<b>'나' ↔ 장인</b> '나'는 어서 성례를 올리고 싶어 하지만, 장인은 '나'를 사경 없이 일을 부리려고 점순이 키를 핑계로 성례를 미룬다.",
+      "<b>'나' ↔ 점순</b> 점순이는 성례를 원해 '나'가 장인에게 적극적으로 따지기를 바라지만, '나'가 번번이 물러서자 '바보'라며 답답해한다."]],
+    ["인물의 성격 (160쪽 1-(2))", [
+      "<b>'나'</b> 어수룩하고 순박하다. 우직하게 일만 하고, 점순이의 말 한마디에 곧장 행동할 만큼 단순하다.",
+      "<b>장인</b> 교활하고 욕심이 많다. 마름의 지위로 마을 사람들에게 위세를 부리고(욕필이), 데릴사위를 이용해 노동력을 착취한다.",
+      "<b>점순</b> 당차고 적극적이다. '나'를 부추기기도 하지만, '나'와 장인이 싸우자 장인 편을 드는 이중적인 태도를 보인다. (교과서 제시)"]],
+    ["제목 '봄·봄'의 의미 (160쪽 1-(3))", [
+      "<b>생명을 얻는 봄</b> 점순이가 성숙해 가고 '나'의 혼인에 대한 욕망이 싹트는 때라는 의미가 담겨 있다.",
+      "<b>순환하는 봄</b> 계절이 돌아 다시 봄이 오듯, 성례를 둘러싼 '나'와 장인의 갈등이 해결되지 않고 해마다 되풀이된다는 의미가 담겨 있다."]],
+    ["작품에 반영된 사회·문화적 상황 (161쪽 2)", [
+      "장인은 배 참봉 댁 마름으로, 작인들의 소작권을 쥐고 닭이나 품을 바치지 않으면 땅을 떼어 버린다. 구장도 장인에게 땅을 얻어 부치기 때문에 장인 편을 들고, 뭉태는 땅을 떼인 뒤 장인을 미워한다.",
+      "장인은 데릴사위제를 이용해 '나'의 노동력을 사경 없이 착취한다. 이를 통해 지주-마름-소작인 구조 속에서 고통받던 1930년대 농촌의 현실을 보여 준다."]],
+    ["해학과 풍자 (161쪽 3)", [
+      "<b>웃음을 주는 언어</b> \"제─미, 키두!\", '빙장님'과 '이 자식' 같은 존칭과 비속어의 뒤섞임, 장인과 '나'가 서로를 '할아버지'라 부르는 장면, '욕필이'라는 별명",
+      "<b>웃음을 주는 상황</b> 소낭당에 점순이 키를 빌기, 물을 대신 길어 주기, 점순이가 엿보자 수염을 잡아채기, 바짓가랑이 싸움, 점순이가 장인 편을 들자 망연자실하기",
+      "<b>해학 vs 풍자</b> 어수룩한 '나'를 따뜻한 시선으로 감싸며 동정심을 불러일으키므로 주로 해학적이다. 다만 교활한 장인과 마름의 횡포를 드러내는 데에는 풍자적인 성격도 있다."]],
+    ["어휘력 더하기 (167쪽)", ["⑴ 마름 ⑵ 치성 ⑶ 내외",
+      "<b>한 줄 감상평 예시</b> 혼인을 미루며 데릴사위인 '나'를 부려 먹는 장인과 순박한 '나'의 갈등을 웃음 속에 그려, 1930년대 농촌의 서글픈 현실을 보여 준다."]]
+  ];
+  function whereFound(id) {
+    const sc = SCENES.map((D, i) => D.npcs.concat(EXTRA[i] || []).some(n => n.id === id && !(n.lines)) ? i + 1 : 0).filter(Boolean);
+    return sc.length === NS ? "모든 장면" : sc.length ? "장면 " + sc.join(", ") : "-";
+  }
+  function teacherHTML() {
+    if (!R.teacherCode) return `<div class="eyebrow">선생님용</div><h2 class="menu-title">교사 코드를 입력하세요</h2>
+      <form class="row" id="teacher-form"><label for="t-code" class="sr">교사 코드</label>
+        <input id="t-code" type="password" inputmode="numeric" autocomplete="off" placeholder="교사 코드" class="t-input">
+        <button class="btn" type="submit">들어가기</button></form>
+      ${R.teacherErr ? `<p class="hint err">${esc(R.teacherErr)}</p>` : ""}
+      <div class="row"><button class="btn ghost" type="button" id="view-close">돌아가기</button></div>`;
+    const scenes = SCENES.map((D, i) => {
+      const o = D.actions.find(a => a.orig);
+      return `<li><div class="ak-h"><b>${i + 1}. ${esc(D.title)}</b><span>${esc(D.time)}</span></div>
+        <p><span class="tag">원작과 같은 선택</span>${esc(o ? o.t : "-")}</p>
+        <p><span class="tag ok">눈치 정답</span>${NUM[D.answer]} ${esc(D.opts[D.answer])}</p>
+        <p class="sm">${esc(D.explain)}</p></li>`;
+    }).join("");
+    const OBJ_WHERE = { stones: "소낭당 옆 돌무더기 (모든 장면)", jige: "봉필네 마루 끝 지게 (모든 장면)", well: "봉필네 앞 우물 (모든 장면)" };
+    const pieces = Object.keys(PIECES).map(k => {
+      const o = OBJS.find(x => x.piece === k), who = Object.keys(FLAVOR).find(id => FLAVOR[id].piece === k);
+      const where = o ? OBJ_WHERE[o.id] : `${CH[who].name}에게 말 걸기 (${whereFound(who)})`;
+      return `<li><b>${esc(PIECES[k].t)}</b> · ${esc(where)}</li>`;
+    }).join("");
+    const T = R.teacherTab || "key";
+    const tabs = [["key", "게임 정답"], ["tb", "교과서 모범답안"], ["board", "전체 순위"], ["setup", "운영 안내"]].map(([k, l]) => `<button type="button" class="${T === k ? "on" : ""}" data-ttab="${k}">${l}</button>`).join("");
+    let body = "";
+    if (T === "key") body = `<ol class="akey">${scenes}<li><div class="ak-h"><b>마지막. 이야기의 순서</b></div><p><span class="tag ok">눈치 정답</span>${NUM[BONUS.answer]} ${esc(BONUS.opts[BONUS.answer])}</p><p class="sm">${esc(BONUS.explain)}</p></li></ol>
+      <h3 class="menu-h">원작 조각 ${PIECE_N}개 위치</h3><ul class="plain">${pieces}</ul>
+      <h3 class="menu-h">결말 조건</h3><ul class="plain">${ENDINGS_GUIDE.map(([a, b]) => `<li><b>${esc(a)}</b> · ${esc(b)}</li>`).join("")}</ul>
+      <p class="hint">숨은 보상(「봄·봄」 노래): 눈치 ${TOTAL_Q}개를 모두 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 열립니다.</p>`;
+    if (T === "tb") body = TB_ANSWERS.map(([h, items]) => `<h3 class="menu-h">${h}</h3><ul class="plain">${items.map(x => `<li>${x}</li>`).join("")}</ul>`).join("") +
+      `<p class="hint">교과서 활동을 바탕으로 정리한 예시 답안입니다. 학생 답은 취지가 맞으면 인정해 주세요.</p>`;
+    if (T === "board") body = `<p class="hint">선생님 화면에서는 이름이 가려지지 않고 번호와 결말도 함께 보여요.</p>` + boardHTML(true);
+    if (T === "setup") body = `<ul class="plain">
+        <li><b>순위 기준</b> 처음 장면에 들어선 때부터 결말 화면까지 걸린 시간(창을 닫은 동안은 빼고 셈) + 틀린 눈치 1개당 ${PEN_WRONG}초 + 못 찾은 조각 1개당 ${PEN_MISS}초. 빨리 누르기만 하면 오히려 손해예요.</li>
+        <li><b>한 사람 한 기록</b> 반·번호·이름이 같으면 가장 빠른 기록 하나만 순위에 남아요. 다시 하기로 기록을 줄일 수 있어요.</li>
+        <li><b>기록 지우기</b> 순위표 구글 시트의 '기록' 탭에서 줄을 지우면 됩니다. 새 수업을 시작할 때 비우고 시작하세요.</li>
+        <li><b>순위표 연결</b> ${RANK_URL ? "연결되어 있어요." : "아직 연결되지 않았어요. 저장소의 apps-script 폴더 안내대로 Apps Script를 배포한 뒤 config.js에 주소를 넣어 주세요."}</li>
+        <li><b>참고</b> 교사 코드와 정답은 게임 파일 안에 들어 있어서, 마음먹고 파일을 뜯어보는 학생은 볼 수 있어요. 수업용 장치로만 생각해 주세요.</li></ul>`;
+    return `<div class="eyebrow">선생님용</div><h2 class="menu-title">정답과 운영</h2>
+      <div class="seg" role="tablist">${tabs}</div>${body}
+      <div class="row"><button class="btn ghost" type="button" id="view-close">닫기</button><button class="btn ghost" type="button" id="teacher-out">교사 화면 나가기</button></div>`;
+  }
+
+  function viewHTML() {
+    if (R.view === "board") return `<div class="eyebrow">봉필네 데릴사위</div><h2 class="menu-title">가장 빨리 클리어한 사람</h2>${boardHTML(false)}
+      <div class="row"><button class="btn" type="button" id="view-close">돌아가기</button></div>`;
+    if (R.view === "teacher") return teacherHTML();
+    return "";
+  }
+  function bindView() {
+    const on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
+    on("view-close", () => { R.view = null; renderUI(); });
+    on("board-btn", () => { R.view = "board"; R.board = null; loadBoard(false); });
+    on("board-open", () => { R.view = "board"; R.board = null; loadBoard(false); });
+    on("teacher-open", () => { R.view = "teacher"; R.teacherErr = ""; renderUI(); });
+    on("board-reload", () => loadBoard(R.view === "teacher"));
+    on("resend-btn", submitRun);
+    on("teacher-out", () => { R.teacherCode = ""; R.view = null; renderUI(); });
+    sheetEl.querySelectorAll("[data-cls]").forEach(b => b.addEventListener("click", () => { R.board.cls = +b.dataset.cls; renderUI(); }));
+    sheetEl.querySelectorAll("[data-ttab]").forEach(b => b.addEventListener("click", () => {
+      R.teacherTab = b.dataset.ttab;
+      if (R.teacherTab === "board") loadBoard(true); else renderUI();
+      const c = sheetEl.firstElementChild; if (c) c.scrollTop = 0;
+    }));
+    const tf = $("teacher-form");
+    if (tf) {
+      const inp = $("t-code"); setTimeout(() => { try { inp.focus(); } catch (e) {} }, 50);
+      tf.addEventListener("submit", async ev => {
+        ev.preventDefault();
+        const code = inp.value.trim(), h = await sha256(code);
+        if (h && h === TEACHER_HASH) { R.teacherCode = code; R.teacherErr = ""; R.teacherTab = "key"; }
+        else R.teacherErr = h ? "코드가 맞지 않아요." : "이 브라우저에서는 교사 화면을 열 수 없어요. 주소가 https로 시작하는지 확인해 주세요.";
+        renderUI();
+      });
+    }
+  }
+
   /* ================= 공통 ================= */
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -574,11 +817,13 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
   const PLACES = [["논", -11.5, 2.2, 0.6], ["소낭당", -14.5, -12.6, 3.6], ["화전밭", -5, -12.8, 0.8], ["봉필네", 2.5, -7.4, 3.4], ["구장 댁", 14.5, -11.8, 3.4], ["뭉태네", 14.5, 3.2, 2.8], ["바깥마당", 5.6, 3.6, 0.4], ["넝 아래", 3.5, 11.6, 0.2]];
 
   /* ================= 상태 ================= */
-  function fresh(name) {
-    return { mode: "title", name: name || "", sc: 0, g: { bae: 20, sim: 60, jeom: 50 }, nunchi: 0, origCount: 0, pieces: [], flags: {}, log: [], px: 2.5, pz: 0, choice: null, pred: null, lastFx: null, lastBonus: 0, bonus: null, endingKey: null, tips: true };
+  function fresh(name, who) {
+    who = who || {};
+    return { cls: who.cls || 0, no: who.no || 0, nm: who.nm || "", playMs: 0, submitted: false, runId: null, mode: "title", name: name || "", sc: 0, g: { bae: 20, sim: 60, jeom: 50 }, nunchi: 0, origCount: 0, pieces: [], flags: {}, log: [], px: 2.5, pz: 0, choice: null, pred: null, lastFx: null, lastBonus: 0, bonus: null, endingKey: null, tips: true };
   }
   let S = fresh();
-  const R = { lines: [], li: 0, speaker: null, cont: null, typing: false, typer: null, near: null, mash: null, help: false, t: 0, lastAdv: 0, mashDone: null, stick: null, celebrated: false };
+  const R = { lines: [], li: 0, speaker: null, cont: null, typing: false, typer: null, near: null, mash: null, help: false, t: 0, lastAdv: 0, mashDone: null, stick: null, celebrated: false, view: null, board: null, rank: null, teacherCode: "", teacherTab: "key", teacherErr: "", secShown: -1 };
+  const keepWho = () => fresh(S.name, { cls: S.cls, no: S.no, nm: S.nm });
   const SONG_URL = "https://youtu.be/tuH5b63FK7k";
   const isPerfect = () => S.nunchi >= TOTAL_Q && S.pieces.length >= PIECE_N;
 
@@ -1291,10 +1536,10 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
     const sc = SCENES[Math.min(S.sc, NS - 1)];
     let main = "봄·봄 마을", sub = "김유정 「봄·봄」";
     if (S.mode !== "title") {
-      if (["bonus", "final"].includes(S.mode) || S.endingKey) { main = "마무리"; sub = "나의 결말"; }
-      else { main = `${S.sc + 1}/${NS} · ${sc.title}`; sub = `눈치 ${S.nunchi}/${TOTAL_Q} · 조각 ${S.pieces.length}/${PIECE_N}`; }
+      if (["bonus", "final"].includes(S.mode) || S.endingKey) { main = "마무리"; sub = S.mode === "final" ? "나의 결말" : `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span> · 거의 다 왔어요`; }
+      else { main = `${S.sc + 1}/${NS} · ${sc.title}`; sub = `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span> · 눈치 ${S.nunchi}/${TOTAL_Q} · 조각 ${S.pieces.length}/${PIECE_N}`; }
     }
-    hudEl.innerHTML = `<button class="chip-btn" type="button" id="chip-btn" aria-label="메뉴 열기"><b>${esc(main)}</b><small>${esc(sub)}</small></button>
+    hudEl.innerHTML = `<button class="chip-btn" type="button" id="chip-btn" aria-label="메뉴 열기"><b>${esc(main)}</b><small>${sub}</small></button>
       <div class="tools">${S.mode === "title" ? "" : `<button class="icon-btn" type="button" id="rot-btn" aria-label="시점 돌리기">↻</button>`}<button class="icon-btn" type="button" id="help-btn">메뉴</button></div>`;
     const openMenu = () => { R.help = true; renderUI(); };
     $("chip-btn").addEventListener("click", openMenu); $("help-btn").addEventListener("click", openMenu);
@@ -1345,6 +1590,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 
   function sheetHTML() {
     const m = S.mode;
+    if (R.view) return viewHTML();
     if (R.help) {
       const sc = SCENES[Math.min(S.sc, NS - 1)];
       const gs = Object.keys(G).map(k => `<div class="g g-${k}"><div class="k"><span>${G[k]}</span><b>${S.g[k]}</b></div><div class="bar"><i style="width:${S.g[k]}%"></i></div></div>`).join("");
@@ -1358,6 +1604,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
         <p class="hint">숨은 보상: 눈치를 모두 맞히고 원작 조각을 모두 모으면 「봄·봄」 노래가 열려요.</p>`;
       return `${status}
         <div class="row"><button class="btn" type="button" id="close-help">게임으로 돌아가기</button><button class="btn ghost" type="button" id="snd-toggle">${soundOn ? "소리 끄기" : "소리 켜기"}</button></div>
+        <div class="title-links"><button type="button" class="link-btn" id="board-open">🏆 순위표 보기</button><button type="button" class="link-btn" id="teacher-open">선생님용</button></div>
         <h3 class="menu-h">조작 방법</h3>${HOWTO}
         <p class="hint">컴퓨터에서는 방향키로 걷고 Q·E로 시점을 돌려요. 스페이스로 말을 걸거나 대사를 넘기고, 숫자 1·2·3으로 선택지를 골라요. 같은 기기에서 다시 열면 이어서 할 수 있어요.</p>
         <details class="guide"><summary>선생님용 안내</summary><ul>
@@ -1375,12 +1622,17 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
         <h2>봉필네 <em>데릴사위</em></h2>
         <p class="lede">나는 돈 한 푼 안 받고 삼 년 하고 꼬박이 일곱 달을 일한 데릴사위. 장인님은 점순이 키가 미처 자라야 한다며 성례를 미루기만 합니다. 마을을 돌아다니며 사람들을 만나고, 그들의 속을 읽어 보세요.</p>
         ${HOWTO}
-        <form class="row" id="start-form">
-          <label for="player-name">이름 (머리 위와 결과 카드에 표시됩니다)</label>
-          <input id="player-name" name="player-name" type="text" maxlength="20" autocomplete="off" enterkeyhint="go" placeholder="예: 1학년 3반 김봄" value="${esc(S.name || (sv && sv.name) || "")}">
+        <form class="row who-form" id="start-form">
+          <label class="who-label">반 · 번호 · 이름 (순위표에 올라가요)</label>
+          <div class="who">
+            <select id="p-cls" aria-label="반" required><option value="">반</option>${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}"${(S.cls || (sv && sv.cls)) === i + 1 ? " selected" : ""}>${i + 1}반</option>`).join("")}</select>
+            <input id="p-no" type="number" inputmode="numeric" min="1" max="45" placeholder="번호" aria-label="번호" required value="${S.no || (sv && sv.no) || ""}">
+            <input id="p-name" type="text" maxlength="10" autocomplete="off" enterkeyhint="go" placeholder="이름" aria-label="이름" required value="${esc(S.nm || (sv && sv.nm) || "")}">
+          </div>
           <button class="btn" type="submit">${canResume ? "처음부터 시작" : "마을로 들어가기"}</button>
-          ${canResume ? `<button class="btn ghost" type="button" id="resume-btn">이어서 하기 · 장면 ${sv.sc + 1}</button>` : ""}
-        </form></div>`;
+          ${canResume ? `<button class="btn ghost" type="button" id="resume-btn">이어서 하기 · 장면 ${sv.sc + 1} · ${fmt((sv.playMs || 0) / 1000)}</button>` : ""}
+        </form>
+        <div class="title-links"><button type="button" class="link-btn" id="board-open">🏆 순위표 보기</button><button type="button" class="link-btn" id="teacher-open">선생님용</button></div></div>`;
     }
     if (m === "result") {
       const D = SCENES[S.sc], ok = S.pred === D.answer;
@@ -1417,6 +1669,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
       const pcs = S.pieces.length ? S.pieces.map(k => `<li><b>${esc(PIECES[k].t)}</b> · ${esc(PIECES[k].p)}</li>`).join("") : `<li>찾은 조각이 없다. 다음 판에는 마을을 둘러보자.</li>`;
       return `<div class="eyebrow">${S.name ? esc(S.name) + "의 " : ""}결말</div>
         <h2 class="end-title">${esc(e.title)}</h2>
+        ${rankCardHTML()}
         ${isPerfect() ? `<div class="reward on"><div class="eyebrow">숨은 보상이 열렸어요</div><h3>「봄·봄」 노래</h3><p>눈치를 모두 맞히고 원작 조각까지 모두 모았어요. 봉필이 속을 꿰뚫은 독자에게 주는 선물이에요.</p><a class="btn" href="${SONG_URL}" target="_blank" rel="noopener">노래 들으러 가기</a></div>` : ""}
         <div class="notes"><div class="note"><span class="t">이 결말 읽기</span><p>${esc(e.note)}</p></div><div class="note"><span class="t">장인님은 왜</span><p>${esc(simLine)}</p></div></div>
         <div class="stats">
@@ -1483,7 +1736,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
     const d = dockHTML(), s = sheetHTML();
     dockEl.innerHTML = d ? `<div class="dock-card${S.mode === "free" ? " compact" : ""}">${d}</div>` : "";
     dockEl.hidden = !d;
-    sheetEl.className = "sheet" + (S.mode === "title" && !R.help ? " title" : "");
+    sheetEl.className = "sheet" + (S.mode === "title" && !R.help && !R.view ? " title" : "");
     sheetEl.innerHTML = s ? `<div class="sheet-card">${s}</div>` : "";
     sheetEl.hidden = !s;
     if (P) P.nm.textContent = S.name || "나";
@@ -1496,18 +1749,21 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
     const f = $("start-form");
     if (f) f.addEventListener("submit", ev => {
       ev.preventDefault(); audio();
-      const inp = $("player-name"), n = inp.value.trim(); inp.blur();
-      clearSave(); S = fresh(n); S.tips = true; startScene(0);
+      const cls = +$("p-cls").value, no = +$("p-no").value, nm = $("p-name").value.trim().replace(/\s+/g, "");
+      if (!cls || !(no > 0) || !nm) return;
+      try { document.activeElement.blur(); } catch (e) {}
+      clearSave(); S = fresh(`${cls}반 ${nm}`, { cls, no, nm }); S.tips = true; R.rank = null; R.celebrated = false; startScene(0);
     });
     on("resume-btn", () => {
       const sv = loadSave(); if (!sv) return; audio();
-      const n = $("player-name") ? $("player-name").value.trim() : "";
-      S = Object.assign(fresh(), sv); if (n) S.name = n;
+      S = Object.assign(fresh(), sv); R.rank = null;
       const mode = S.mode; S.mode = "free";
       setupScene(Math.min(S.sc, NS - 1));
       P.x = S.px; P.z = S.pz; if (!walkable(P.x, P.z)) { const c = ctr(nearestFree(tileAt(P.x, P.z))); P.x = c.x; P.z = c.z; }
       S.mode = mode; R.near = null; renderHUD(); renderUI();
+      if (S.mode === "final" && !S.submitted) submitRun();
     });
+    bindView();
     on("close-help", () => { R.help = false; renderUI(); });
     on("snd-toggle", () => { soundOn = !soundOn; try { localStorage.setItem("bombom-sound", soundOn ? "on" : "off"); } catch (e) {} if (soundOn) sfx("pick"); renderUI(); });
     if (S.mode === "dialog" && !R.help) {
@@ -1529,10 +1785,10 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
       const e = ending(); S.endingKey = e.key;
       const p = T(400, 340); P.x = p.x; P.z = p.z; P.lie = false; P.path = [];
       if (ENT.jangin && ENT.jangin.active) R.partner = "jangin";
-      renderHUD(); play(e.lines, () => { R.partner = null; S.mode = "final"; renderHUD(); renderUI(); if (isPerfect() && !R.celebrated) { R.celebrated = true; sfx("fanfare"); toast("숨은 보상이 열렸어요! 「봄·봄」 노래를 들어 보세요", 4500); for (let q = 0; q < 3; q++) setTimeout(() => dust(P.x, P.z, ["#EE719F", "#F7B5CC", "#F2D04E", "#FFFFFF"], 24, true), q * 350); } });
+      renderHUD(); play(e.lines, () => { R.partner = null; S.mode = "final"; renderHUD(); renderUI(); submitRun(); if (isPerfect() && !R.celebrated) { R.celebrated = true; sfx("fanfare"); toast("숨은 보상이 열렸어요! 「봄·봄」 노래를 들어 보세요", 4500); for (let q = 0; q < 3; q++) setTimeout(() => dust(P.x, P.z, ["#EE719F", "#F7B5CC", "#F2D04E", "#FFFFFF"], 24, true), q * 350); } });
     });
-    on("again-btn", () => { const n = S.name; clearSave(); S = fresh(n); S.tips = false; startScene(0); });
-    on("home-btn", () => { const n = S.name; clearSave(); S = fresh(n); setupScene(0); P.x = 2.5; P.z = 0; renderHUD(); renderUI(); });
+    on("again-btn", () => { clearSave(); S = keepWho(); S.tips = false; R.rank = null; R.celebrated = false; startScene(0); });
+    on("home-btn", () => { clearSave(); S = keepWho(); R.rank = null; R.celebrated = false; setupScene(0); P.x = 2.5; P.z = 0; renderHUD(); renderUI(); });
   }
 
   /* ================= 입력 ================= */
@@ -1541,7 +1797,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
     const tgt = ev.target;
     if (tgt && tgt.closest && tgt.closest("input, textarea")) return;
     const k = KEYMAP[ev.key];
-    if (k && S.mode === "free" && !R.help) { keys[k] = true; ev.preventDefault(); return; }
+    if (k && S.mode === "free" && !R.help && !R.view) { keys[k] = true; ev.preventDefault(); return; }
     if (ev.key === " " || ev.key === "Enter") {
       if (tgt && tgt.closest && tgt.closest("button, a, [role=button]")) return;
       if (S.mode === "dialog") { ev.preventDefault(); advance(); }
@@ -1650,7 +1906,12 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
   }
   let last = 0;
   function frame(ts) {
-    const dt = Math.min(0.05, last ? (ts - last) / 1000 : 0); last = ts;
+    const real = last ? (ts - last) / 1000 : 0, dt = Math.min(0.05, real); last = ts;
+    if (S.mode !== "title" && S.mode !== "final" && !S.submitted) {
+      S.playMs = (S.playMs || 0) + Math.min(real, 1) * 1000;
+      const sec = Math.floor(S.playMs / 1000);
+      if (sec !== R.secShown) { R.secShown = sec; const el = $("hud-time"); if (el) el.textContent = fmt(sec); }
+    }
     update(dt); updateCamera(dt); applyLight(dt);
     renderer.render(scene, cam); updateLabels();
     requestAnimationFrame(frame);
