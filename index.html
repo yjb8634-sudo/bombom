@@ -146,6 +146,8 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .verdict.ok { background: #1D3420; } .verdict.bad { background: #3A2219; }
 .verdict .v { font-weight: 700; }
 .verdict.late { background: #33301A; } .verdict.late .v { color: var(--thatch); }
+.choice.peek { border-color: var(--thatch); box-shadow: inset 0 0 0 1px var(--thatch); }
+.peek-tag { font-style: normal; font-size: 11.5px; font-weight: 700; color: #161D18; background: var(--thatch); border-radius: 6px; padding: 1px 6px; margin-left: 4px; vertical-align: 2px; }
 .choice.struck { cursor: default; opacity: .42; border-style: dashed; }
 .choice.struck .tx { text-decoration: line-through; text-decoration-thickness: 1.5px; }
 .choice.struck .mk { color: var(--bad); }
@@ -793,7 +795,8 @@ html { touch-action: manipulation; }
     if (st.tries) parts.push(`오답 ${st.tries}번 × ${PEN_TRY}초`);
     if (st.ms) parts.push(`못 찾은 조각 ${st.ms}개 × ${PEN_MISS}초`);
     let line = "";
-    if (!S.cls) line = `<p class="hint">이름 없이 시작해서 순위표에는 오르지 않아요.</p>`;
+    if (S.teacher) line = `<p class="hint">선생님 플레이라 순위표에는 오르지 않아요.</p>`;
+    else if (!S.cls) line = `<p class="hint">이름 없이 시작해서 순위표에는 오르지 않아요.</p>`;
     else if (rk.state === "off") line = `<p class="hint">순위표가 아직 연결되지 않았어요. 선생님께 기록을 보여 주세요.</p>`;
     else if (rk.state === "sending") line = `<p class="hint">기록을 순위표에 올리는 중…</p>`;
     else if (rk.state === "fail") line = `<p class="hint">기록을 올리지 못했어요. ${rk.msg ? esc(rk.msg) : "인터넷 연결을 확인하고 다시 눌러 주세요."}</p><div class="row"><button class="btn ghost" type="button" id="resend-btn">기록 다시 올리기</button></div>`;
@@ -898,7 +901,7 @@ html { touch-action: manipulation; }
       return `<li><b>${esc(PIECES[k].t)}</b> · ${esc(where)}</li>`;
     }).join("");
     const T = R.teacherTab || "qr";
-    const tabs = [["qr", "QR 공유"], ["end", "결말 보기"], ["key", "게임 정답"], ["tb", "교과서 모범답안"], ["board", "전체 순위"], ["setup", "운영 안내"]].map(([k, l]) => `<button type="button" class="${T === k ? "on" : ""}" data-ttab="${k}">${l}</button>`).join("");
+    const tabs = [["qr", "QR 공유"], ["play", "직접 플레이"], ["end", "결말 보기"], ["key", "게임 정답"], ["tb", "교과서 모범답안"], ["board", "전체 순위"], ["setup", "운영 안내"]].map(([k, l]) => `<button type="button" class="${T === k ? "on" : ""}" data-ttab="${k}">${l}</button>`).join("");
     let body = "";
     if (T === "qr") body = `<div class="qr-wrap">${qrPanel(false)}
         <p class="hint">학생들이 휴대폰 카메라로 비추면 바로 게임이 열려요. 앱 설치나 로그인은 필요 없어요.</p>
@@ -908,6 +911,12 @@ html { touch-action: manipulation; }
       <h3 class="menu-h">원작 조각 ${PIECE_N}개 위치</h3><ul class="plain">${pieces}</ul>
       <h3 class="menu-h">결말 조건</h3><ul class="plain">${ENDINGS_GUIDE.map(([a, b], i) => `<li><b>${esc(a)}</b> · ${esc(b)} <button class="link-btn" type="button" data-pend="${ENDING_KEYS[i]}">결말 보기 ▸</button></li>`).join("")}</ul>
       <p class="hint">눈치는 틀려도 ${PEN_TRY}초만 늘고, 틀린 답이 지워지고 힌트가 나와 결국 모두 정답으로 넘어가요.<br>숨은 보상(「봄·봄」 노래): 눈치 ${TOTAL_Q}개를 모두 한 번에 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 열립니다.</p>`;
+    if (T === "play") body = `<p class="hint">학생과 똑같은 게임을 '선생님' 이름으로 해 봅니다. 순위표에는 오르지 않고, 이 기기에 저장된 학생의 '이어서 하기'도 지우지 않아요.</p>
+      <ul class="end-list">
+        <li><div><b>선생님으로 플레이</b><small>학생 화면 그대로. 수업 전에 미리 해 보거나 시범을 보일 때</small></div><button class="btn" type="button" id="tplay-btn">시작</button></li>
+        <li><div><b>정답 보면서 플레이</b><small>행동 고르기에는 '원작', 눈치 보기에는 '정답' 표시가 붙어요. 화면을 띄울 땐 학생에게 정답이 보이니 주의!</small></div><button class="btn ghost" type="button" id="tpeek-btn">시작</button></li>
+      </ul>
+      <p class="hint">플레이 중 왼쪽 위 상태창이나 [메뉴]를 누르면 [교사 화면으로] 버튼이 있어요.</p>`;
     if (T === "end") body = `<p class="hint">학생 화면과 똑같이 마지막 장면이 연출돼요. 진행 중이던 판이나 기록에는 영향이 없어요.</p>
       <ul class="end-list">${ENDING_KEYS.map(k => { const e = endingData(k); return `<li><div><b>${esc(e.title)}</b><small>${esc(ENDING_COND[k])}</small></div><button class="btn${k === "orig" ? "" : " ghost"}" type="button" data-pend="${k}">결말 보기</button></li>`; }).join("")}</ul>`;
     if (T === "tb") body = TB_ANSWERS.map(([h, items]) => `<h3 class="menu-h">${h}</h3><ul class="plain">${items.map(x => `<li>${x}</li>`).join("")}</ul>`).join("") +
@@ -1005,11 +1014,11 @@ html { touch-action: manipulation; }
   /* ================= 상태 ================= */
   function fresh(name, who) {
     who = who || {};
-    return { cls: who.cls || 0, no: who.no || 0, nm: who.nm || "", playMs: 0, submitted: false, runId: null, mode: "title", name: name || "", sc: 0, g: { bae: 20, sim: 60, jeom: 50 }, nunchi: 0, wrong: 0, tries: [], origCount: 0, pieces: [], flags: {}, log: [], px: 2.5, pz: 0, choice: null, pred: null, lastFx: null, lastBonus: 0, bonus: null, endingKey: null, tips: true };
+    return { cls: who.cls || 0, no: who.no || 0, nm: who.nm || "", teacher: !!who.teacher, peek: !!who.peek, playMs: 0, submitted: false, runId: null, mode: "title", name: name || "", sc: 0, g: { bae: 20, sim: 60, jeom: 50 }, nunchi: 0, wrong: 0, tries: [], origCount: 0, pieces: [], flags: {}, log: [], px: 2.5, pz: 0, choice: null, pred: null, lastFx: null, lastBonus: 0, bonus: null, endingKey: null, tips: true };
   }
   let S = fresh();
   const R = { lines: [], li: 0, speaker: null, cont: null, typing: false, typer: null, near: null, mash: null, help: false, t: 0, lastAdv: 0, mashDone: null, stick: null, celebrated: false, view: null, board: null, rank: null, teacherCode: "", teacherTab: "key", teacherErr: "", secShown: -1, preview: null };
-  const keepWho = () => fresh(S.name, { cls: S.cls, no: S.no, nm: S.nm });
+  const keepWho = () => fresh(S.name, { cls: S.cls, no: S.no, nm: S.nm, teacher: S.teacher, peek: S.peek });
   const SONG_URL = "https://youtu.be/tuH5b63FK7k";
   const isPerfect = () => S.nunchi >= TOTAL_Q && S.pieces.length >= PIECE_N;
 
@@ -1021,7 +1030,7 @@ html { touch-action: manipulation; }
   }
   function save() {
     try {
-      if (!R.preview && ["free", "inter", "result", "bonus", "final"].includes(S.mode)) {
+      if (!R.preview && !S.teacher && ["free", "inter", "result", "bonus", "final"].includes(S.mode)) {
         if (P) { S.px = P.x; S.pz = P.z; }
         localStorage.setItem(SAVE_KEY, JSON.stringify(S));
       }
@@ -1693,7 +1702,7 @@ html { touch-action: manipulation; }
   }
   /* 새로고침으로 벌점을 지우지 못하게, 저장본의 시간도 함께 늘려 둔다 */
   function keepPenalty() {
-    if (R.preview) return;
+    if (R.preview || S.teacher) return;
     try { const sv = loadSave(); if (sv && sv.runId === S.runId && sv.sc === S.sc) { sv.playMs = Math.max(sv.playMs || 0, S.playMs); sv.wrong = S.wrong; localStorage.setItem(SAVE_KEY, JSON.stringify(sv)); } } catch (e) {}
     save();
   }
@@ -1757,13 +1766,20 @@ html { touch-action: manipulation; }
   function previewEnding(key) {
     if (!R.preview) R.preview = { S: JSON.stringify(S), px: P.x, pz: P.z };
     R.view = null; R.help = false; R.dockMin = false;
-    S = fresh(S.name, { cls: S.cls, no: S.no, nm: S.nm });
+    S = fresh(S.name, { cls: S.cls, no: S.no, nm: S.nm, teacher: S.teacher, peek: S.peek });
     S.sc = NS - 1; S.flags = { out8: true }; S.mode = "free"; S.tips = false;
     setupScene(NS - 1);
     const e = endingData(key); S.endingKey = e.key; R.previewKey = e.key;
     const p = T(400, 340); P.x = p.x; P.z = p.z; P.lie = false; P.path = [];
     if (ENT.jangin && ENT.jangin.active) R.partner = "jangin";
     renderHUD(); play(e.lines, () => { R.partner = null; S.mode = "pview"; renderHUD(); renderUI(); });
+  }
+  /* 선생님 플레이: 순위표에 오르지 않고, 학생 저장본도 건드리지 않는다. peek 이면 정답 표시 */
+  function teacherPlay(peek) {
+    R.view = null; R.help = false; R.preview = null; audio();
+    S = fresh("선생님", { teacher: true, peek: !!peek }); S.tips = true; R.rank = null; R.celebrated = false;
+    startScene(0);
+    if (peek) setTimeout(() => toast("정답 보기 켜짐 · 원작 선택과 눈치 정답에 표시가 붙어요", 3500), 4700);
   }
   function endPreview() {
     if (!R.preview) return;
@@ -1781,6 +1797,7 @@ html { touch-action: manipulation; }
     const sc = SCENES[Math.min(S.sc, NS - 1)];
     let main = "봄·봄 마을", sub = "김유정 「봄·봄」";
     if (R.preview) { main = "결말 미리보기"; sub = "선생님용 · 눌러서 나가기"; }
+    else if (S.teacher && S.mode !== "title" && !["bonus", "final"].includes(S.mode) && !S.endingKey) { main = `${S.sc + 1}/${NS} · ${SCENES[Math.min(S.sc, NS - 1)].title}`; sub = `선생님 플레이${S.peek ? " · 정답 보기" : ""} · ⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span>`; }
     else if (S.mode !== "title") {
       if (["bonus", "final"].includes(S.mode) || S.endingKey) { main = "마무리"; sub = S.mode === "final" ? "나의 결말" : `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span> · 거의 다 왔어요`; }
       else { main = `${S.sc + 1}/${NS} · ${sc.title}`; sub = `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span> · 눈치 ${S.nunchi}/${TOTAL_Q} · 조각 ${S.pieces.length}/${PIECE_N}`; }
@@ -1858,7 +1875,7 @@ html { touch-action: manipulation; }
         <ul class="piece-list">${pl}</ul>
         <p class="hint">숨은 보상: 눈치를 모두 한 번에 맞히고 원작 조각을 모두 모으면 「봄·봄」 노래가 열려요.</p>`;
       return `${status}
-        <div class="row"><button class="btn" type="button" id="close-help">게임으로 돌아가기</button><button class="btn ghost" type="button" id="snd-toggle">${soundOn ? "소리 끄기" : "소리 켜기"}</button></div>
+        <div class="row"><button class="btn" type="button" id="close-help">게임으로 돌아가기</button><button class="btn ghost" type="button" id="snd-toggle">${soundOn ? "소리 끄기" : "소리 켜기"}</button>${S.teacher && S.mode !== "title" ? `<button class="btn ghost" type="button" id="tquit-btn">교사 화면으로</button>` : ""}</div>
         <div class="title-links"><button type="button" class="link-btn" id="board-open">🏆 순위표 보기</button><button type="button" class="link-btn" id="teacher-open">선생님용</button></div>
         <h3 class="menu-h">조작 방법</h3>${HOWTO}
         <p class="hint">컴퓨터에서는 방향키로 걷고 Q·E로 시점을 돌려요. 스페이스로 말을 걸거나 대사를 넘기고, 숫자 1·2·3으로 선택지를 골라요. 같은 기기에서 다시 열면 이어서 할 수 있어요.</p>
@@ -1943,7 +1960,7 @@ html { touch-action: manipulation; }
           <li>마름인 장인과 작인들, 그리고 데릴사위제는 1930년대 농촌의 어떤 모습을 보여 줄까?</li>
           <li>제목이 '봄·봄'인 까닭은? 생명이 깨어나는 봄, 그리고 해마다 다시 돌아오는 봄을 함께 생각해 보자.</li>
         </ol></div>
-        <div class="row"><button class="btn" type="button" id="again-btn">다른 선택으로 다시 하기</button><button class="btn ghost" type="button" id="home-btn">처음 화면으로</button></div>`;
+        <div class="row"><button class="btn" type="button" id="again-btn">다른 선택으로 다시 하기</button>${S.teacher ? `<button class="btn ghost" type="button" id="tquit-btn">교사 화면으로</button>` : `<button class="btn ghost" type="button" id="home-btn">처음 화면으로</button>`}</div>`;
     }
     return "";
   }
@@ -1951,8 +1968,8 @@ html { touch-action: manipulation; }
   function tryLine() { const n = (S.tries || []).length; return n ? `틀린 답은 지워졌어요. 지금까지 +${fmt(n * PEN_TRY)}` : `작품을 떠올려 고르세요. 틀리면 ${PEN_TRY}초가 늘고 다시 고를 수 있어요.`; }
   function hintBox(h) { return (S.tries || []).length && h ? `<p class="hintbox"><b>힌트</b>${esc(h)}</p>` : ""; }
   function choiceBtns(opts, kind) {
-    const tr = S.tries || [];
-    return opts.map((o, i) => { const x = tr.includes(i); return `<button class="choice${x ? " struck" : ""}" type="button" data-${kind}="${i}"${x ? " disabled aria-disabled=\"true\"" : ""}><span class="mk">${x ? "✕" : NUM[i]}</span><span class="tx">${esc(o)}</span></button>`; }).join("");
+    const tr = S.tries || [], ans = kind === "bonus" ? BONUS.answer : SCENES[S.sc].answer;
+    return opts.map((o, i) => { const x = tr.includes(i), pk = S.peek && i === ans; return `<button class="choice${x ? " struck" : ""}${pk ? " peek" : ""}" type="button" data-${kind}="${i}"${x ? " disabled aria-disabled=\"true\"" : ""}><span class="mk">${x ? "✕" : NUM[i]}</span><span class="tx">${esc(o)}${pk ? ` <em class="peek-tag">정답</em>` : ""}</span></button>`; }).join("");
   }
   function dockHTML() {
     const m = S.mode;
@@ -1973,7 +1990,7 @@ html { touch-action: manipulation; }
     if (m === "choice") {
       const D = SCENES[S.sc];
       return `<div class="dlg static"><div class="portrait">${portrait("na", "nervous", true)}</div><div><p class="ask">나는 어떻게 할까?</p>
-        <div class="choices">${D.actions.map((a, i) => `<button class="choice" type="button" data-act="${i}"><span class="mk">${MK[i]}</span><span class="tx">${esc(a.t)}<small>${esc(a.s)}</small></span></button>`).join("")}</div></div></div>`;
+        <div class="choices">${D.actions.map((a, i) => `<button class="choice${S.peek && a.orig ? " peek" : ""}" type="button" data-act="${i}"><span class="mk">${MK[i]}</span><span class="tx">${esc(a.t)}${S.peek && a.orig ? ` <em class="peek-tag">원작</em>` : ""}<small>${esc(a.s)}</small></span></button>`).join("")}</div></div></div>`;
     }
     if (m === "predict") {
       const D = SCENES[S.sc];
@@ -2049,6 +2066,9 @@ html { touch-action: manipulation; }
     on("cont-btn", afterVerdict);
     sheetEl.querySelectorAll("[data-pend]").forEach(b => b.addEventListener("click", () => previewEnding(b.dataset.pend)));
     on("pview-out", endPreview);
+    on("tplay-btn", () => teacherPlay(false));
+    on("tquit-btn", () => { S = fresh(); R.help = false; R.partner = null; R.rank = null; setupScene(0); P.x = 2.5; P.z = 0; P.path = []; R.view = "teacher"; R.teacherTab = "play"; renderHUD(); renderUI(); });
+    on("tpeek-btn", () => teacherPlay(true));
     const mb = $("mash-btn");
     if (mb) { mb.addEventListener("pointerdown", ev => { ev.preventDefault(); mashTap(); }); mb.addEventListener("click", ev => { if (ev.detail === 0) mashTap(); }); }
     on("sc-btn", endScene);
@@ -2059,8 +2079,8 @@ html { touch-action: manipulation; }
       if (ENT.jangin && ENT.jangin.active) R.partner = "jangin";
       renderHUD(); play(e.lines, () => { R.partner = null; S.mode = "final"; renderHUD(); renderUI(); submitRun(); if (isPerfect() && !R.celebrated) { R.celebrated = true; sfx("fanfare"); toast("숨은 보상이 열렸어요! 「봄·봄」 노래를 들어 보세요", 4500); for (let q = 0; q < 3; q++) setTimeout(() => dust(P.x, P.z, ["#EE719F", "#F7B5CC", "#F2D04E", "#FFFFFF"], 24, true), q * 350); } });
     });
-    on("again-btn", () => { clearSave(); S = keepWho(); S.tips = false; R.rank = null; R.celebrated = false; startScene(0); });
-    on("home-btn", () => { clearSave(); S = keepWho(); R.rank = null; R.celebrated = false; setupScene(0); P.x = 2.5; P.z = 0; renderHUD(); renderUI(); });
+    on("again-btn", () => { if (!S.teacher) clearSave(); S = keepWho(); S.tips = false; R.rank = null; R.celebrated = false; startScene(0); });
+    on("home-btn", () => { if (!S.teacher) clearSave(); S = keepWho(); R.rank = null; R.celebrated = false; setupScene(0); P.x = 2.5; P.z = 0; renderHUD(); renderUI(); });
   }
 
   /* ================= 입력 ================= */
