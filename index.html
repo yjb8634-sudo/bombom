@@ -332,6 +332,14 @@ html { touch-action: manipulation; }
   .choice { min-height: 44px; padding: 7px 12px; font-size: 14.5px; }
   .gauges, .marks { display: none; }
 }
+
+.del-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--panel-2); font-size: 14.5px; }
+.del-bar > span { flex: 1 1 160px; }
+.del-bar.warn { background: #3A2219; box-shadow: inset 0 0 0 1px var(--bad); }
+.del-bar.warn b { color: var(--bad); }
+.board td.pk, .board th.pk { width: 40px; padding-left: 6px; padding-right: 0; text-align: center; }
+.board td.pk input { width: 22px; height: 22px; accent-color: var(--bad); cursor: pointer; margin: 0; }
+.board tr.picked td { background: rgba(234, 133, 105, .14); }
 </style>
 
 <div class="app" id="app">
@@ -813,8 +821,21 @@ html { touch-action: manipulation; }
   function loadBoard(teacher) {
     R.board = { state: "loading", list: [], teacher: !!teacher, cls: R.board ? R.board.cls : (S.cls || 0) };
     renderUI();
-    rankGet(teacher ? R.teacherCode : "").then(j => { R.board.state = "ok"; R.board.list = j.v || []; R.board.at = Date.now(); renderUI(); })
+    rankGet(teacher ? R.teacherCode : "").then(j => { R.board.state = "ok"; R.board.list = j.v || []; R.board.srv = !!j.teacher; R.board.at = Date.now(); renderUI(); })
       .catch(e => { R.board.state = e && e.message === "off" ? "off" : "fail"; renderUI(); });
+  }
+  const delKey = x => x.c + "|" + x.no + "|" + x.n;
+  function deleteSelected() {
+    const B = R.board; if (!B || !R.delSel || !R.delSel.size) return;
+    const keys = B.list.filter(x => R.delSel.has(delKey(x))).map(x => ({ c: x.c, no: x.no, n: x.n }));
+    R.del = { state: "busy" }; renderUI();
+    rankPost({ a: "del", code: R.teacherCode, keys })
+      .then(v => { R.delSel = new Set(); R.del = { msg: `${keys.length}명의 기록 ${v && v.removed != null ? v.removed + "줄" : ""}을 지웠어요.` }; loadBoard(true); })
+      .catch(e => {
+        const m = e && e.message || "";
+        R.del = { err: true, msg: /알 수 없는 요청/.test(m) ? "순위표 서버(Apps Script)가 예전 버전이에요. 저장소의 최신 순위표.gs를 붙여 넣고 '새 버전'으로 배포해 주세요." : (m && !/fetch|network|JSON|Load failed/i.test(m) ? m : "지우지 못했어요. 인터넷 연결을 확인해 주세요.") };
+        renderUI();
+      });
   }
   function boardHTML(inTeacher) {
     const B = R.board || { state: "loading", list: [] };
@@ -822,15 +843,26 @@ html { touch-action: manipulation; }
     if (B.state === "loading") return `<p class="hint">순위표를 불러오는 중…</p>`;
     if (B.state === "fail") return `<p class="hint">순위표를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</p><div class="row"><button class="btn ghost" type="button" id="board-reload">다시 불러오기</button></div>`;
     const classes = [...new Set(B.list.map(x => x.c))].sort((a, b) => a - b);
-    const rows = B.list.map((x, i) => Object.assign({ r: i + 1 }, x)).filter(x => !B.cls || x.c === B.cls);
+    const rows = B.list.map((x, i) => Object.assign({ r: i + 1, i }, x)).filter(x => !B.cls || x.c === B.cls);
+    const sel = R.delSel || (R.delSel = new Set()), canDel = inTeacher && B.teacher && B.srv;
     const tabs = `<div class="seg" role="tablist"><button type="button" class="${!B.cls ? "on" : ""}" data-cls="0">전체</button>${classes.map(c => `<button type="button" class="${B.cls === c ? "on" : ""}" data-cls="${c}">${c}반</button>`).join("")}</div>`;
     const ENDN = { orig: "원작", meek: "참기만", left: "떠남" };
     const body = rows.length ? rows.map((x, i) => {
       const me = S.cls && x.c === S.cls && x.no === S.no;
       const rr = B.cls ? i + 1 : x.r;
-      return `<tr class="${me ? "me" : ""}${rr <= 3 ? " top" + rr : ""}"><td class="rk">${rr}</td><td>${x.c}반 ${inTeacher ? x.no + "번 " : ""}${esc(x.n)}${me ? " <small>(나)</small>" : ""}</td><td class="tm">${fmt(x.rec)}</td><td class="sm">조각 ${PIECE_N - x.ms}/${PIECE_N}${inTeacher ? " · " + (ENDN[x.end] || "-") : ""}</td></tr>`;
-    }).join("") : `<tr><td colspan="4" class="sm">아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!</td></tr>`;
-    return `${tabs}<div class="board-wrap"><table class="board"><thead><tr><th>순위</th><th>이름</th><th>기록</th><th>내용</th></tr></thead><tbody>${body}</tbody></table></div>
+      const k = delKey(x), on = sel.has(k);
+      return `<tr class="${me ? "me" : ""}${rr <= 3 ? " top" + rr : ""}${on ? " picked" : ""}">${canDel ? `<td class="pk"><input type="checkbox" data-pick="${x.i}" aria-label="${x.c}반 ${x.no}번 ${esc(x.n)} 고르기"${on ? " checked" : ""}></td>` : ""}<td class="rk">${rr}</td><td>${x.c}반 ${inTeacher ? x.no + "번 " : ""}${esc(x.n)}${me ? " <small>(나)</small>" : ""}</td><td class="tm">${fmt(x.rec)}</td><td class="sm">조각 ${PIECE_N - x.ms}/${PIECE_N}${inTeacher ? " · " + (ENDN[x.end] || "-") : ""}</td></tr>`;
+    }).join("") : `<tr><td colspan="${canDel ? 5 : 4}" class="sm">아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!</td></tr>`;
+    let delBar = inTeacher && !B.srv ? `<p class="hint err">순위표 서버가 교사 코드를 알아보지 못해 이름이 가려져 있고 기록을 지울 수 없어요. Apps Script의 TEACHER_CODE를 바꾸고 '새 버전'으로 배포해 주세요.</p>` : "";
+    if (canDel) {
+      const n = sel.size, D = R.del || {};
+      if (D.state === "busy") delBar = `<div class="del-bar"><span>지우는 중…</span></div>`;
+      else if (D.state === "ask") delBar = `<div class="del-bar warn"><span><b>${n}명</b>의 기록을 모두 지울까요? 되돌릴 수 없어요.</span><button class="btn" type="button" id="del-go">지우기</button><button class="btn ghost" type="button" id="del-cancel">취소</button></div>`;
+      else if (n) delBar = `<div class="del-bar"><span>${n}명 골랐어요</span><button class="btn" type="button" id="del-ask">고른 학생 기록 지우기</button><button class="btn ghost" type="button" id="del-clear">선택 풀기</button></div>`;
+      else delBar = `<p class="hint">지울 학생 왼쪽 칸을 눌러 고른 뒤 '고른 학생 기록 지우기'를 누르세요. 그 학생의 모든 기록이 지워져요.</p>`;
+      if (D.msg) delBar += `<p class="hint${D.err ? " err" : ""}">${esc(D.msg)}</p>`;
+    }
+    return `${tabs}${delBar}<div class="board-wrap"><table class="board"><thead><tr>${canDel ? `<th class="pk"><span class="sr">고르기</span></th>` : ""}<th>순위</th><th>이름</th><th>기록</th><th>내용</th></tr></thead><tbody>${body}</tbody></table></div>
       <p class="hint">한 사람당 가장 빠른 기록 하나만 올라가요. 기록 = 걸린 시간(눈치를 틀릴 때마다 ${PEN_TRY}초씩 더해짐) + 못 찾은 조각 1개당 ${PEN_MISS}초.${inTeacher ? "" : " 이름 가운데 글자는 가려서 보여 줘요."}</p>
       <div class="row"><button class="btn ghost" type="button" id="board-reload">새로고침</button></div>`;
   }
@@ -966,7 +998,16 @@ html { touch-action: manipulation; }
       const fail = () => { R.copyFail = true; renderUI(); };
       try { navigator.clipboard.writeText(u).then(done, fail); } catch (e) { fail(); }
     });
-    on("teacher-out", () => { R.teacherCode = ""; R.view = null; renderUI(); });
+    on("teacher-out", () => { R.delSel = new Set(); R.del = null; R.teacherCode = ""; R.view = null; renderUI(); });
+    sheetEl.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("change", () => {
+      const x = R.board && R.board.list[+b.dataset.pick]; if (!x) return;
+      const k = delKey(x); if (b.checked) R.delSel.add(k); else R.delSel.delete(k);
+      if (R.del && R.del.state !== "busy") R.del = null; renderUI();
+    }));
+    on("del-ask", () => { R.del = { state: "ask" }; renderUI(); });
+    on("del-cancel", () => { R.del = null; renderUI(); });
+    on("del-clear", () => { R.delSel = new Set(); R.del = null; renderUI(); });
+    on("del-go", deleteSelected);
     sheetEl.querySelectorAll("[data-cls]").forEach(b => b.addEventListener("click", () => { R.board.cls = +b.dataset.cls; renderUI(); }));
     sheetEl.querySelectorAll("[data-ttab]").forEach(b => b.addEventListener("click", () => {
       R.teacherTab = b.dataset.ttab;

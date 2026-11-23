@@ -1,6 +1,7 @@
 /* 봉필네 데릴사위 · 순위표 (Google Apps Script)
  * 구글 시트의 [확장 프로그램 → Apps Script]에 이 내용을 통째로 붙여 넣고, 웹 앱으로 배포합니다.
- * 자세한 순서는 같은 폴더의 '설치 방법.txt'를 보세요. */
+ * 자세한 순서는 같은 폴더의 '설치 방법.txt'를 보세요.
+ * 2026-11 판: 선생님용 기록 삭제(a: 'del') 추가 */
 
 const TEACHER_CODE = '959795';      // 게임의 교사용 코드와 같게 둡니다. 바꾸려면 게임 쪽도 함께 바꿔야 해요.
 const SHEET_NAME = '기록';
@@ -59,10 +60,31 @@ function doGet(e) {
   }
 }
 
+/* 선생님용: 고른 학생의 기록을 모두 지웁니다. keys = [{c, no, n}, …] */
+function del_(b, lock) {
+  if (String(b.code || '') !== TEACHER_CODE) throw new Error('교사 코드가 맞지 않아요.');
+  const keys = (Array.isArray(b.keys) ? b.keys : []).slice(0, 200).map(function (k) {
+    return Math.round(Number(k.c)) + '|' + Math.round(Number(k.no)) + '|' + String(k.n || '').trim();
+  });
+  if (!keys.length) throw new Error('지울 학생을 고르세요.');
+  lock.waitLock(10000);
+  const sh = sheet_();
+  const rows = sh.getDataRange().getValues();
+  let removed = 0;
+  for (let i = rows.length - 1; i >= 1; i--) {
+    const r = rows[i];
+    if (keys.indexOf(Number(r[1]) + '|' + Number(r[2]) + '|' + String(r[3]).trim()) >= 0) { sh.deleteRow(i + 1); removed++; }
+  }
+  SpreadsheetApp.flush();
+  lock.releaseLock();
+  return { ok: true, v: { removed: removed } };
+}
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
     const b = JSON.parse(e.postData.contents);
+    if (b.a === 'del') return out_(del_(b, lock));
     if (b.a !== 'submit') throw new Error('알 수 없는 요청이에요.');
     const c = Math.round(Number(b.c)), no = Math.round(Number(b.no));
     const n = String(b.n || '').replace(/\s+/g, '').slice(0, 10);
