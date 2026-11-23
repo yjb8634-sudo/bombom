@@ -340,6 +340,35 @@ html { touch-action: manipulation; }
 .board td.pk, .board th.pk { width: 40px; padding-left: 6px; padding-right: 0; text-align: center; }
 .board td.pk input { width: 22px; height: 22px; accent-color: var(--bad); cursor: pointer; margin: 0; }
 .board tr.picked td { background: rgba(234, 133, 105, .14); }
+
+.song-ov { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom)); background: rgba(8, 12, 10, .72); animation: hintIn .3s ease-out; }
+.song-box { width: min(760px, 100%); background: #1C261F; border: 2px solid var(--azalea); border-radius: 18px; padding: 14px; display: grid; gap: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.song-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.song-head b { font-family: var(--f-display); font-size: 21px; color: var(--azalea); }
+.song-x { flex: none; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); font-size: 18px; cursor: pointer; }
+.song-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
+.song-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.song-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; font-size: 13.5px; color: var(--muted); }
+.song-foot a { color: var(--azalea); font-weight: 700; }
+@media (max-height: 520px) { .song-box { width: min(560px, 100%); } }
+
+.autobar { position: fixed; z-index: 55; left: 50%; top: max(12px, env(safe-area-inset-top)); transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; border-radius: 999px; background: rgba(22, 29, 24, .94); border: 1.5px solid var(--thatch); box-shadow: 0 8px 24px rgba(0,0,0,.35); font-size: 14px; white-space: nowrap; max-width: calc(100vw - 24px); }
+.autobar b { color: var(--thatch); margin-right: 4px; }
+.autobar button { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); font: inherit; font-size: 13.5px; cursor: pointer; }
+.ab-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--azalea); animation: abPulse 1.2s ease-in-out infinite; }
+.ab-dot.off { animation: none; background: var(--muted); }
+@keyframes abPulse { 50% { opacity: .25; } }
+@media (max-width: 700px) { .autobar { top: auto; bottom: calc(48% + 10px); font-size: 13px; padding-left: 10px; gap: 5px; } .autobar b { display: none; } .autobar button { padding: 0 10px; font-size: 13px; } }
+.verdict .why { margin-top: 6px; font-size: 14.5px; line-height: 1.6; color: var(--ink); opacity: .92; }
+.review { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.rv { padding: 12px 14px; border-radius: 12px; background: var(--panel-2); border-left: 4px solid var(--good, #8CC063); }
+.rv.bad { border-left-color: var(--bad); }
+.rv-h { display: flex; justify-content: space-between; gap: 10px; font-family: var(--f-display); font-size: 16px; }
+.rv.ok .rv-h b { color: var(--good, #8CC063); } .rv.bad .rv-h b { color: var(--bad); }
+.rv-q { margin: 6px 0 4px; font-weight: 700; font-size: 15px; line-height: 1.5; }
+.rv-mine { margin: 2px 0; font-size: 14px; color: var(--muted); text-decoration: line-through; }
+.rv-a { margin: 2px 0; font-size: 14.5px; color: var(--thatch); font-weight: 700; }
+.rv-x { margin: 6px 0 0; font-size: 14.5px; line-height: 1.65; }
 </style>
 
 <div class="app" id="app">
@@ -765,13 +794,12 @@ html { touch-action: manipulation; }
   const CFG = window.BOMBOM_CONFIG || {};
   const RANK_URL = String(CFG.rankUrl || "").trim();
   const TEACHER_HASH = String(CFG.teacherHash || "447ebcd322091abfd5daf8b228c5b82b15707081edf8c23caf8654bc361a7172");
-  const PEN_TRY = 30, PEN_MISS = 30;   // 눈치를 한 번 틀릴 때마다 30초(바로 시계에 더함), 못 찾은 조각 1개당 30초
+  const PEN_WRONG = 60, PEN_MISS = 30;   // 틀린 눈치 1개당 1분, 못 찾은 조각 1개당 30초 (순위표 서버의 계산식과 같음)
 
   const fmt = sec => { sec = Math.max(0, Math.round(sec)); const m = Math.floor(sec / 60), s = sec % 60; return (m >= 60 ? Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0") : String(m).padStart(2, "0")) + ":" + String(s).padStart(2, "0"); };
   function runStats() {
-    // play 에는 틀린 횟수 × 30초가 이미 들어 있다. 서버 계산식(play + wr×60 + ms×30)은 그대로 두고 wr 는 0으로 보낸다.
-    const play = Math.round((S.playMs || 0) / 1000), tries = S.wrong || 0, ms = PIECE_N - S.pieces.length;
-    return { play, real: Math.max(0, play - tries * PEN_TRY), tries, wr: 0, ms, rec: play + ms * PEN_MISS };
+    const play = Math.round((S.playMs || 0) / 1000), wr = Math.min(TOTAL_Q, S.wrong || 0), ms = PIECE_N - S.pieces.length;
+    return { play, real: play, tries: wr, wr, ms, rec: play + wr * PEN_WRONG + ms * PEN_MISS };
   }
 
   function rankGet(code) {
@@ -800,7 +828,7 @@ html { touch-action: manipulation; }
   function rankCardHTML() {
     const st = runStats(), rk = R.rank || {};
     const parts = [];
-    if (st.tries) parts.push(`오답 ${st.tries}번 × ${PEN_TRY}초`);
+    if (st.wr) parts.push(`틀린 눈치 ${st.wr}개 × 1분`);
     if (st.ms) parts.push(`못 찾은 조각 ${st.ms}개 × ${PEN_MISS}초`);
     let line = "";
     if (S.teacher) line = `<p class="hint">선생님 플레이라 순위표에는 오르지 않아요.</p>`;
@@ -851,7 +879,7 @@ html { touch-action: manipulation; }
       const me = S.cls && x.c === S.cls && x.no === S.no;
       const rr = B.cls ? i + 1 : x.r;
       const k = delKey(x), on = sel.has(k);
-      return `<tr class="${me ? "me" : ""}${rr <= 3 ? " top" + rr : ""}${on ? " picked" : ""}">${canDel ? `<td class="pk"><input type="checkbox" data-pick="${x.i}" aria-label="${x.c}반 ${x.no}번 ${esc(x.n)} 고르기"${on ? " checked" : ""}></td>` : ""}<td class="rk">${rr}</td><td>${x.c}반 ${inTeacher ? x.no + "번 " : ""}${esc(x.n)}${me ? " <small>(나)</small>" : ""}</td><td class="tm">${fmt(x.rec)}</td><td class="sm">조각 ${PIECE_N - x.ms}/${PIECE_N}${inTeacher ? " · " + (ENDN[x.end] || "-") : ""}</td></tr>`;
+      return `<tr class="${me ? "me" : ""}${rr <= 3 ? " top" + rr : ""}${on ? " picked" : ""}">${canDel ? `<td class="pk"><input type="checkbox" data-pick="${x.i}" aria-label="${x.c}반 ${x.no}번 ${esc(x.n)} 고르기"${on ? " checked" : ""}></td>` : ""}<td class="rk">${rr}</td><td>${x.c}반 ${inTeacher ? x.no + "번 " : ""}${esc(x.n)}${me ? " <small>(나)</small>" : ""}</td><td class="tm">${fmt(x.rec)}</td><td class="sm">눈치 ${TOTAL_Q - x.wr}/${TOTAL_Q} · 조각 ${PIECE_N - x.ms}/${PIECE_N}${inTeacher ? " · " + (ENDN[x.end] || "-") : ""}</td></tr>`;
     }).join("") : `<tr><td colspan="${canDel ? 5 : 4}" class="sm">아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!</td></tr>`;
     let delBar = inTeacher && !B.srv ? `<p class="hint err">순위표 서버가 교사 코드를 알아보지 못해 이름이 가려져 있고 기록을 지울 수 없어요. Apps Script의 TEACHER_CODE를 바꾸고 '새 버전'으로 배포해 주세요.</p>` : "";
     if (canDel) {
@@ -863,7 +891,7 @@ html { touch-action: manipulation; }
       if (D.msg) delBar += `<p class="hint${D.err ? " err" : ""}">${esc(D.msg)}</p>`;
     }
     return `${tabs}${delBar}<div class="board-wrap"><table class="board"><thead><tr>${canDel ? `<th class="pk"><span class="sr">고르기</span></th>` : ""}<th>순위</th><th>이름</th><th>기록</th><th>내용</th></tr></thead><tbody>${body}</tbody></table></div>
-      <p class="hint">한 사람당 가장 빠른 기록 하나만 올라가요. 기록 = 걸린 시간(눈치를 틀릴 때마다 ${PEN_TRY}초씩 더해짐) + 못 찾은 조각 1개당 ${PEN_MISS}초.${inTeacher ? "" : " 이름 가운데 글자는 가려서 보여 줘요."}</p>
+      <p class="hint">한 사람당 가장 빠른 기록 하나만 올라가요. 기록 = 걸린 시간 + 틀린 눈치 1개당 1분 + 못 찾은 조각 1개당 ${PEN_MISS}초.${inTeacher ? "" : " 이름 가운데 글자는 가려서 보여 줘요."}</p>
       <div class="row"><button class="btn ghost" type="button" id="board-reload">새로고침</button></div>`;
   }
 
@@ -942,10 +970,11 @@ html { touch-action: manipulation; }
     if (T === "key") body = `<ol class="akey">${scenes}<li><div class="ak-h"><b>마지막. 이야기의 순서</b></div><p><span class="tag ok">눈치 정답</span>${NUM[BONUS.answer]} ${esc(BONUS.opts[BONUS.answer])}</p><p class="sm">${esc(BONUS.explain)}</p></li></ol>
       <h3 class="menu-h">원작 조각 ${PIECE_N}개 위치</h3><ul class="plain">${pieces}</ul>
       <h3 class="menu-h">결말 조건</h3><ul class="plain">${ENDINGS_GUIDE.map(([a, b], i) => `<li><b>${esc(a)}</b> · ${esc(b)} <button class="link-btn" type="button" data-pend="${ENDING_KEYS[i]}">결말 보기 ▸</button></li>`).join("")}</ul>
-      <p class="hint">눈치는 틀려도 ${PEN_TRY}초만 늘고, 틀린 답이 지워지고 힌트가 나와 결국 모두 정답으로 넘어가요.<br>숨은 보상(「봄·봄」 노래): 눈치 ${TOTAL_Q}개를 모두 한 번에 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 열립니다.</p>`;
+      <p class="hint">눈치는 문제마다 한 번만 고를 수 있어요. 틀리면 기록에 1분이 더해지고, 정답과 해설을 보여 준 뒤 이야기는 계속돼요(새로고침해도 다시 못 골라요). 결말 화면에서 해설만 다시 볼 수 있어요.<br>숨은 보상(「봄·봄」 노래): 눈치 ${TOTAL_Q}개를 모두 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 열립니다.</p>`;
     if (T === "play") body = `<p class="hint">학생과 똑같은 게임을 '선생님' 이름으로 해 봅니다. 순위표에는 오르지 않고, 이 기기에 저장된 학생의 '이어서 하기'도 지우지 않아요.</p>
       <ul class="end-list">
         <li><div><b>선생님으로 플레이</b><small>학생 화면 그대로. 수업 전에 미리 해 보거나 시범을 보일 때</small></div><button class="btn" type="button" id="tplay-btn">시작</button></li>
+        <li><div><b>정답 자동 시연</b><small>게임이 스스로 원작 조각 6개를 모으고, 원작대로 고르고, 눈치를 모두 맞히며 결말과 「봄·봄」 노래까지 갑니다. 수업 마무리에 TV로 함께 보기 좋아요. 화면 위 막대로 멈추거나 빠르게 할 수 있어요.</small></div><button class="btn" type="button" id="tauto-btn">시연 시작</button></li>
         <li><div><b>정답 보면서 플레이</b><small>행동 고르기에는 '원작', 눈치 보기에는 '정답' 표시가 붙어요. 화면을 띄울 땐 학생에게 정답이 보이니 주의!</small></div><button class="btn ghost" type="button" id="tpeek-btn">시작</button></li>
       </ul>
       <p class="hint">플레이 중 왼쪽 위 상태창이나 [메뉴]를 누르면 [교사 화면으로] 버튼이 있어요.</p>`;
@@ -955,7 +984,7 @@ html { touch-action: manipulation; }
       `<p class="hint">교과서 활동을 바탕으로 정리한 예시 답안입니다. 학생 답은 취지가 맞으면 인정해 주세요.</p>`;
     if (T === "board") body = `<p class="hint">선생님 화면에서는 이름이 가려지지 않고 번호와 결말도 함께 보여요.</p>` + boardHTML(true);
     if (T === "setup") body = `<ul class="plain">
-        <li><b>순위 기준</b> 처음 장면에 들어선 때부터 결말 화면까지 걸린 시간(창을 닫은 동안은 빼고 셈) + 못 찾은 조각 1개당 ${PEN_MISS}초. 눈치를 틀리면 그때마다 ${PEN_TRY}초가 시계에 바로 더해지고, 틀린 답은 지워지고 힌트가 나와서 누구나 정답을 거쳐 결말까지 갈 수 있어요. 아무거나 막 누르면 오히려 손해예요.</li>
+        <li><b>순위 기준</b> 처음 장면에 들어선 때부터 결말 화면까지 걸린 시간(창을 닫은 동안은 빼고 셈) + 틀린 눈치 1개당 1분 + 못 찾은 조각 1개당 ${PEN_MISS}초. 눈치는 한 번만 고를 수 있어서, 빨리 누르기만 하면 오히려 손해예요. 순위표에는 한 사람당 가장 좋은 기록 하나가 올라가요.</li>
         <li><b>한 사람 한 기록</b> 반·번호·이름이 같으면 가장 빠른 기록 하나만 순위에 남아요. 다시 하기로 기록을 줄일 수 있어요.</li>
         <li><b>기록 지우기</b> 순위표 구글 시트의 '기록' 탭에서 줄을 지우면 됩니다. 새 수업을 시작할 때 비우고 시작하세요.</li>
         <li><b>순위표 연결</b> ${RANK_URL ? "연결되어 있어요." : "아직 연결되지 않았어요. 저장소의 apps-script 폴더 안내대로 Apps Script를 배포한 뒤 config.js에 주소를 넣어 주세요."}</li>
@@ -1061,6 +1090,21 @@ html { touch-action: manipulation; }
   const R = { lines: [], li: 0, speaker: null, cont: null, typing: false, typer: null, near: null, mash: null, help: false, t: 0, lastAdv: 0, mashDone: null, stick: null, celebrated: false, view: null, board: null, rank: null, teacherCode: "", teacherTab: "key", teacherErr: "", secShown: -1, preview: null };
   const keepWho = () => fresh(S.name, { cls: S.cls, no: S.no, nm: S.nm, teacher: S.teacher, peek: S.peek });
   const SONG_URL = "https://youtu.be/tuH5b63FK7k";
+  const SONG_EMBED = "https://www.youtube.com/embed/tuH5b63FK7k?autoplay=1&playsinline=1&rel=0&modestbranding=1";
+  /* 숨은 보상: 게임 위에 영상 창을 띄우고 바로 재생. 시트를 다시 그려도 영상이 끊기지 않게 따로 둔다 */
+  function openSong() {
+    closeSong();
+    const el = document.createElement("div");
+    el.id = "song"; el.className = "song-ov"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "「봄·봄」 노래");
+    el.innerHTML = `<div class="song-box">
+      <div class="song-head"><div><div class="eyebrow">숨은 보상이 열렸어요</div><b>「봄·봄」 노래</b></div><button type="button" class="song-x" id="song-x" aria-label="닫기">✕</button></div>
+      <div class="song-frame"><iframe src="${SONG_EMBED}" title="「봄·봄」 노래" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+      <div class="song-foot"><span>소리가 안 나오면 영상의 ▶를 눌러 주세요.</span><a href="${SONG_URL}" target="_blank" rel="noopener">YouTube에서 보기</a></div></div>`;
+    el.addEventListener("click", ev => { if (ev.target === el) closeSong(); });
+    (document.getElementById("app") || document.body).appendChild(el);
+    el.querySelector("#song-x").addEventListener("click", closeSong);
+  }
+  function closeSong() { const el = document.getElementById("song"); if (el) el.remove(); }
   const isPerfect = () => S.nunchi >= TOTAL_Q && S.pieces.length >= PIECE_N;
 
   function applyFx(fx) {
@@ -1708,7 +1752,7 @@ html { touch-action: manipulation; }
     if (a.orig) S.origCount++;
     if (a.flag) S.flags[a.flag] = true;
     if (S.sc === 6 && i === 0) { P.lie = false; P.hopT = 0.42; }
-    const toPredict = () => play(D.bridge || [], () => { S.mode = "predict"; renderUI(); });
+    const toPredict = () => play(D.bridge || [], () => { S.mode = "predict"; renderUI(); if (S.locked && S.locked[S.sc] != null) setTimeout(() => pickPred(S.locked[S.sc]), 700); });
     if (a.mash) startMash(() => play(a.reply, toPredict)); else play(a.reply, toPredict);
   }
   function startMash(done) { R.mashDone = done; S.mode = "mash"; R.mash = { v: 55, el: 0, sum: 0 }; P.shake = true; if (ENT.jangin) ENT.jangin.shake = true; renderUI(); }
@@ -1718,36 +1762,29 @@ html { touch-action: manipulation; }
     if (ok) { applyFx({ bae: 5 }); toast("끝까지 버텼다 · 배짱 +5"); } else toast("힘이 빠졌다……");
     const d = R.mashDone; R.mashDone = null; d && d();
   }
+  /* 눈치는 한 번만 고른다. 틀리면 기록에 1분이 더해지고, 정답과 해설을 보여 준 뒤 이야기는 그대로 이어진다.
+     고른 답은 저장본에도 바로 묶어 두어, 새로고침해도 다시 고를 수 없다. */
   function pickPred(i) {
     if (S.mode !== "predict") return;
     const D = SCENES[S.sc];
-    S.tries = S.tries || [];
-    if (S.tries.includes(i)) return;
-    if (i !== D.answer) { missTry(i); return; }
-    const first = S.tries.length === 0;
-    S.pred = i; if (first) S.nunchi++;
-    sfx("ok");
-    const real = applyFx({ bae: first ? 5 : 0 }); S.lastBonus = real.bae;
+    if (S.locked && S.locked[S.sc] != null) i = S.locked[S.sc];
+    const ok = i === D.answer;
+    S.pred = i; S.lastOk = ok;
+    if (ok) S.nunchi++; else S.wrong = (S.wrong || 0) + 1;
+    lockAnswer(S.sc, i);
+    sfx(ok ? "ok" : "bad");
+    if (!ok) { try { navigator.vibrate && navigator.vibrate([30, 40, 30]); } catch (e) {} toast(`눈치가 빗나갔다 · 기록 +${PEN_WRONG / 60}분`, 2400); }
+    const real = applyFx({ bae: ok ? 5 : 0 }); S.lastBonus = real.bae;
     const a = D.actions[S.choice];
-    S.log.push({ title: D.title, time: D.time, act: a.t, orig: !!a.orig, surrender: !!a.surrender, ok: first, tries: S.tries.length + 1 });
-    S.lastTries = S.tries.length; S.tries = [];
-    S.mode = "verdict"; renderUI(); renderHUD();
+    S.log.push({ title: D.title, time: D.time, act: a.t, orig: !!a.orig, surrender: !!a.surrender, ok, pick: i });
+    R.secShown = -1; S.mode = "verdict"; renderUI(); renderHUD();
   }
-  /* 틀리면 시간만 30초 늘고, 고른 답은 지워지고, 힌트가 나온다. 맞힐 때까지 계속. */
-  function missTry(i) {
-    S.tries.push(i); S.wrong = (S.wrong || 0) + 1;
-    if (!R.preview) S.playMs = (S.playMs || 0) + PEN_TRY * 1000;
-    sfx("bad"); try { navigator.vibrate && navigator.vibrate([30, 40, 30]); } catch (e) {}
-    toast(`눈치가 빗나갔다 · +${PEN_TRY}초 · 힌트를 보고 다시 골라 보세요`, 2600);
-    R.secShown = -1; renderHUD(); renderUI(); keepPenalty();
-  }
-  /* 새로고침으로 벌점을 지우지 못하게, 저장본의 시간도 함께 늘려 둔다 */
-  function keepPenalty() {
+  function lockAnswer(k, i) {
+    S.locked = Object.assign({}, S.locked, { [k]: i });
     if (R.preview || S.teacher) return;
-    try { const sv = loadSave(); if (sv && sv.runId === S.runId && sv.sc === S.sc) { sv.playMs = Math.max(sv.playMs || 0, S.playMs); sv.wrong = S.wrong; localStorage.setItem(SAVE_KEY, JSON.stringify(sv)); } } catch (e) {}
-    save();
+    try { const sv = loadSave(); if (sv && sv.runId === S.runId) { sv.locked = Object.assign({}, sv.locked, { [k]: i }); localStorage.setItem(SAVE_KEY, JSON.stringify(sv)); } } catch (e) {}
   }
-  function triesNote(n) { return n ? `${n + 1}번 만에 맞혔다 · +${fmt(n * PEN_TRY)}` : "한 번에 맞혔다!"; }
+  const penSec = () => (S.wrong || 0) * PEN_WRONG;
   function afterVerdict() {
     if (S.mode !== "verdict") return;
     const D = SCENES[S.sc], a = D.actions[S.choice];
@@ -1756,14 +1793,14 @@ html { touch-action: manipulation; }
   }
   function pickBonus(i) {
     if (S.mode !== "bonus" || S.bonus !== null) return;
-    S.tries = S.tries || [];
-    if (S.tries.includes(i)) return;
-    if (i !== BONUS.answer) { missTry(i); return; }
-    S.bonusTries = S.tries.length; S.tries = [];
-    S.bonus = i; if (!S.bonusTries) S.nunchi++;
-    sfx("ok"); renderHUD(); renderUI(); save();
+    if (S.locked && S.locked.b != null) i = S.locked.b;
+    const ok = i === BONUS.answer;
+    S.bonus = i; if (ok) S.nunchi++; else S.wrong = (S.wrong || 0) + 1;
+    lockAnswer("b", i);
+    sfx(ok ? "ok" : "bad"); if (!ok) toast(`눈치가 빗나갔다 · 기록 +${PEN_WRONG / 60}분`, 2400);
+    R.secShown = -1; renderHUD(); renderUI(); save();
   }
-  function endScene() { if (S.sc < NS - 1) { S.mode = "inter"; renderUI(); } else { S.mode = "bonus"; S.bonus = null; S.tries = []; renderUI(); } }
+  function endScene() { if (S.sc < NS - 1) { S.mode = "inter"; renderUI(); } else { S.mode = "bonus"; S.bonus = null; renderUI(); if (S.locked && S.locked.b != null) setTimeout(() => pickBonus(S.locked.b), 700); } }
   function startScene(n) {
     S.sc = n; S.mode = "free"; S.choice = null; S.pred = null; S.lastFx = null; R.near = null; R.pending = null; R.partner = null; R.speaker = null;
     const st = T(SCENES[n].start[0], SCENES[n].start[1]);
@@ -1822,6 +1859,60 @@ html { touch-action: manipulation; }
     startScene(0);
     if (peek) setTimeout(() => toast("정답 보기 켜짐 · 원작 선택과 눈치 정답에 표시가 붙어요", 3500), 4700);
   }
+  /* ===== 정답 자동 시연: 원작 조각 6개를 모으고, 원작대로 고르고, 눈치는 모두 한 번에 맞혀 결말과 노래까지 ===== */
+  function autoDemo() {
+    teacherPlay(true);
+    R.auto = { on: true, paused: false, f: 1, until: performance.now() + 2500, mode: null, lines: null, li: -1, tried: {} };
+    clearInterval(autoDemo.iv); autoDemo.iv = setInterval(autoTick, 100);
+    renderAutoBar();
+  }
+  function stopAuto() { clearInterval(autoDemo.iv); R.auto = null; renderAutoBar(); }
+  function renderAutoBar() {
+    let el = document.getElementById("autobar");
+    if (!R.auto) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement("div"); el.id = "autobar"; el.className = "autobar"; (document.getElementById("app") || document.body).appendChild(el); }
+    const A = R.auto;
+    el.innerHTML = `<span class="ab-dot${A.paused ? " off" : ""}"></span><b>${A.paused ? "시연 멈춤" : "정답 자동 시연 중"}</b>
+      <button type="button" id="ab-pause">${A.paused ? "▶ 이어서" : "❚❚ 잠깐 멈춤"}</button>
+      <button type="button" id="ab-speed">${A.f < 1 ? "보통 속도로" : "빠르게"}</button>
+      <button type="button" id="ab-stop">■ 그만</button>`;
+    el.querySelector("#ab-pause").onclick = () => { A.paused = !A.paused; A.until = performance.now() + 600; renderAutoBar(); };
+    el.querySelector("#ab-speed").onclick = () => { A.f = A.f < 1 ? 1 : 0.45; renderAutoBar(); };
+    el.querySelector("#ab-stop").onclick = () => { stopAuto(); toast("자동 시연을 멈췄어요. 이어서 직접 해 보세요", 2600); };
+  }
+  function pieceOf(e) { return e.obj ? e.piece : (e.lines ? null : (FLAVOR[e.id] || {}).piece); }
+  function autoTick() {
+    const A = R.auto; if (!A || !A.on) return;
+    if (A.paused || R.help || R.view || R.preview) return;
+    const now = performance.now(); if (now < A.until) return;
+    const m = S.mode, f = A.f, click = id => { const b = $(id); if (b) b.click(); };
+    if (m === "title" || m === "final") { stopAuto(); return; }
+    const DWELL = { choice: 2200, predict: 2600, verdict: 2400, result: 6500, inter: 2600, bonus: 3200, free: 700, mash: 300 };
+    if (m !== A.mode) { A.mode = m; A.until = now + (DWELL[m] || 0) * f; A.lines = null; return; }
+    if (m === "dialog") {
+      if (R.typing) return;
+      if (A.lines !== R.lines || A.li !== R.li) { A.lines = R.lines; A.li = R.li; const l = R.lines[R.li]; A.until = now + (700 + 45 * ((l && l.text) || "").length) * f; return; }
+      advance(); A.until = now + 150; return;
+    }
+    if (m === "free") {
+      if (P.path.length || R.pending) return;
+      const todo = ents().find(e => { const pc = pieceOf(e); return pc && !S.pieces.includes(pc) && (A.tried[e.id] || 0) < 2; });
+      const main = ENT[SCENES[S.sc].npcs.find(n => n.main).id];
+      const t = todo || main;
+      A.tried[t.id] = (A.tried[t.id] || 0) + 1;
+      R.pending = t.id; walkTo(P, t.x, t.z, true); A.until = now + 400; return;
+    }
+    if (m === "choice") { pickAction(Math.max(0, SCENES[S.sc].actions.findIndex(a => a.orig))); A.until = now + 300; return; }
+    if (m === "mash") { mashTap(); A.until = now + 110; return; }
+    if (m === "predict") { pickPred(SCENES[S.sc].answer); A.until = now + 300; return; }
+    if (m === "verdict") { afterVerdict(); A.until = now + 300; return; }
+    if (m === "result") { click("sc-btn"); A.until = now + 300; return; }
+    if (m === "inter") { click("next-btn"); A.until = now + 300; return; }
+    if (m === "bonus") {
+      if (S.bonus === null) { pickBonus(BONUS.answer); A.until = now + 6500 * f; return; }
+      click("end-btn"); A.until = now + 300; return;
+    }
+  }
   function endPreview() {
     if (!R.preview) return;
     const b = R.preview; R.preview = null;
@@ -1838,10 +1929,10 @@ html { touch-action: manipulation; }
     const sc = SCENES[Math.min(S.sc, NS - 1)];
     let main = "봄·봄 마을", sub = "김유정 「봄·봄」";
     if (R.preview) { main = "결말 미리보기"; sub = "선생님용 · 눌러서 나가기"; }
-    else if (S.teacher && S.mode !== "title" && !["bonus", "final"].includes(S.mode) && !S.endingKey) { main = `${S.sc + 1}/${NS} · ${SCENES[Math.min(S.sc, NS - 1)].title}`; sub = `선생님 플레이${S.peek ? " · 정답 보기" : ""} · ⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span>`; }
+    else if (S.teacher && S.mode !== "title" && !["bonus", "final"].includes(S.mode) && !S.endingKey) { main = `${S.sc + 1}/${NS} · ${SCENES[Math.min(S.sc, NS - 1)].title}`; sub = `선생님 플레이${S.peek ? " · 정답 보기" : ""} · ⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000 + penSec())}</span>`; }
     else if (S.mode !== "title") {
-      if (["bonus", "final"].includes(S.mode) || S.endingKey) { main = "마무리"; sub = S.mode === "final" ? "나의 결말" : `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span> · 거의 다 왔어요`; }
-      else { main = `${S.sc + 1}/${NS} · ${sc.title}`; sub = `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000)}</span> · 눈치 ${S.nunchi}/${TOTAL_Q} · 조각 ${S.pieces.length}/${PIECE_N}`; }
+      if (["bonus", "final"].includes(S.mode) || S.endingKey) { main = "마무리"; sub = S.mode === "final" ? "나의 결말" : `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000 + penSec())}</span> · 거의 다 왔어요`; }
+      else { main = `${S.sc + 1}/${NS} · ${sc.title}`; sub = `⏱ <span id="hud-time">${fmt((S.playMs || 0) / 1000 + penSec())}</span> · 눈치 ${S.nunchi}/${TOTAL_Q} · 조각 ${S.pieces.length}/${PIECE_N}`; }
     }
     hudEl.innerHTML = `<button class="chip-btn" type="button" id="chip-btn" aria-label="메뉴 열기"><b>${esc(main)}</b><small>${sub}</small></button>
       <div class="tools">${S.mode === "title" ? "" : `<button class="icon-btn" type="button" id="rot-btn" aria-label="시점 돌리기">↻</button>`}<button class="icon-btn" type="button" id="help-btn">메뉴</button></div>`;
@@ -1895,6 +1986,14 @@ html { touch-action: manipulation; }
   function sheetHTML() {
     const m = S.mode;
     if (R.view) return viewHTML();
+    if (R.review) {
+      const items = SCENES.map((D, k) => { const l = S.log[k]; if (!l) return ""; const pick = l.pick != null ? l.pick : (S.locked || {})[k]; const ok = pick === D.answer;
+        return `<li class="rv ${ok ? "ok" : "bad"}"><div class="rv-h"><span>${k + 1}. ${esc(D.title)}</span><b>${ok ? "적중" : "빗나감 +1분"}</b></div><p class="rv-q">${esc(D.q)}</p>${ok ? "" : `<p class="rv-mine">내 답 ${pick != null ? NUM[pick] + " " + esc(D.opts[pick]) : "-"}</p>`}<p class="rv-a">정답 ${NUM[D.answer]} ${esc(D.opts[D.answer])}</p><p class="rv-x">${esc(D.explain)}</p></li>`; }).join("");
+      const bOk = S.bonus === BONUS.answer;
+      return `<div class="eyebrow">눈치 문제 해설</div><h2 class="end-title" style="font-size:24px">다시 읽어 보기</h2><p class="hint">다시 풀 수는 없어요. 틀린 문제는 교과서에서 그 장면을 찾아 확인해 보세요.</p>
+        <ol class="review">${items}<li class="rv ${bOk ? "ok" : "bad"}"><div class="rv-h"><span>마지막. 이야기의 순서</span><b>${bOk ? "적중" : "빗나감 +1분"}</b></div><p class="rv-q">${esc(BONUS.q)}</p>${bOk ? "" : `<p class="rv-mine">내 답 ${S.bonus != null ? NUM[S.bonus] + " " + esc(BONUS.opts[S.bonus]) : "-"}</p>`}<p class="rv-a">정답 ${NUM[BONUS.answer]} ${esc(BONUS.opts[BONUS.answer])}</p><p class="rv-x">${esc(BONUS.explain)}</p></li></ol>
+        <div class="row"><button class="btn" type="button" id="review-close">결말 화면으로</button></div>`;
+    }
     if (m === "pview") {
       const e = endingData(R.previewKey), others = ENDING_KEYS.filter(k => k !== e.key);
       return `<div class="eyebrow">선생님용 · 결말 미리보기</div><h2 class="end-title">${esc(e.title)}</h2>
@@ -1914,7 +2013,7 @@ html { touch-action: manipulation; }
         <div class="gauges-big">${gs}</div>
         <div class="menu-marks"><span>눈치 <span class="dots">${nd}</span> <b>${S.nunchi}/${TOTAL_Q}</b></span><span>원작 조각 <b>${S.pieces.length}/${PIECE_N}</b></span></div>
         <ul class="piece-list">${pl}</ul>
-        <p class="hint">숨은 보상: 눈치를 모두 한 번에 맞히고 원작 조각을 모두 모으면 「봄·봄」 노래가 열려요.</p>`;
+        <p class="hint">숨은 보상: 눈치를 모두 맞히고 원작 조각을 모두 모으면 「봄·봄」 노래가 열려요.</p>`;
       return `${status}
         <div class="row"><button class="btn" type="button" id="close-help">게임으로 돌아가기</button><button class="btn ghost" type="button" id="snd-toggle">${soundOn ? "소리 끄기" : "소리 켜기"}</button>${S.teacher && S.mode !== "title" ? `<button class="btn ghost" type="button" id="tquit-btn">교사 화면으로</button>` : ""}</div>
         <div class="title-links"><button type="button" class="link-btn" id="board-open">🏆 순위표 보기</button><button type="button" class="link-btn" id="teacher-open">선생님용</button></div>
@@ -1924,7 +2023,7 @@ html { touch-action: manipulation; }
           <li><b>교재</b> 공통국어2(비상교육, 박영민) 4단원 「봄·봄」 수록 부분에 맞춰 8장면을 구성했습니다. 대사는 원작 문장을 살렸습니다.</li>
           <li><b>시간</b> 한 판 20분 안팎. 남은 시간은 결말별 비교 토론</li>
           <li><b>연결되는 활동</b> 갈등의 원인과 인물의 성격, 제목 '봄·봄'의 의미, 지주-마름-소작인 구조와 데릴사위제, 해학의 요소, 발단-전개-절정①-결말-절정② 구성</li>
-          <li><b>숨은 보상</b> 눈치 ${TOTAL_Q}개를 모두 한 번에 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 결과 화면에 「봄·봄」 노래 링크가 열립니다.</li>
+          <li><b>숨은 보상</b> 눈치 ${TOTAL_Q}개를 모두 맞히고 원작 조각 ${PIECE_N}개를 모두 모으면 결과 화면에 「봄·봄」 노래 링크가 열립니다.</li>
         </ul></details>`;
     }
     if (m === "title") {
@@ -1968,32 +2067,32 @@ html { touch-action: manipulation; }
     if (m === "bonus") {
       if (S.bonus === null) return `<div class="dlg static"><div class="portrait">${portrait("na", "dazed", true)}</div><div>
           <div class="eyebrow">마지막 눈치 · 이야기의 순서</div>
-          <p class="ask" style="margin-top:4px">${esc(BONUS.q)}<small>게임은 시간 순서대로 진행했지만, 원작은 다르답니다. ${tryLine()}</small></p>
-          ${hintBox(BONUS.hint)}
+          <p class="ask" style="margin-top:4px">${esc(BONUS.q)}<small>게임은 시간 순서대로 진행했지만, 원작은 다르답니다. ${ONE_SHOT}</small></p>
           <div class="choices">${choiceBtns(BONUS.opts, "bonus")}</div></div></div>`;
-      const ok = !S.bonusTries;
-      return `<div class="verdict ${ok ? "ok" : "late"}"><span class="v">${ok ? "눈치가 맞았다! 한 번에 맞혔어요" : esc(triesNote(S.bonusTries))} · 정답 ${NUM[BONUS.answer]}</span><p>${esc(BONUS.explain)}</p></div>
+      const ok = S.bonus === BONUS.answer;
+      return `<div class="verdict ${ok ? "ok" : "bad"}"><span class="v">${ok ? "눈치가 맞았다!" : `눈치가 빗나갔다…… · 기록 +${PEN_WRONG / 60}분`} · 정답 ${NUM[BONUS.answer]}</span><p>${esc(BONUS.explain)}</p></div>
         <div class="row"><button class="btn" type="button" id="end-btn">나의 결말 보기</button></div>`;
     }
     if (m === "final") {
       const e = ending(), sim = S.g.sim;
       const simLine = sim <= 25 ? `장인님 심기는 ${sim}까지 떨어졌습니다. 그런데도 장인님은 '나'를 내쫓지 않았습니다. 왜일까요? (뭉태네 장면을 떠올려 보세요.)` : `장인님 심기 ${sim}. 장인님은 끝까지 성례 날짜를 정해 주지 않았습니다.`;
-      const rows = S.log.map(l => `<tr><td>${esc(l.title)}</td><td>${esc(l.act)}${l.orig ? ` <span class="y">· 원작과 같음</span>` : ""}</td><td class="${l.ok ? "y" : "n2"}"><b>${l.ok ? "한 번에" : (l.tries || 2) + "번 만에"}</b></td></tr>`).join("");
-      const bOk = !S.bonusTries;
+      const rows = S.log.map(l => `<tr><td>${esc(l.title)}</td><td>${esc(l.act)}${l.orig ? ` <span class="y">· 원작과 같음</span>` : ""}</td><td class="${l.ok ? "y" : "n2"}"><b>${l.ok ? "적중" : "빗나감"}</b></td></tr>`).join("");
+      const bOk = S.bonus === BONUS.answer;
       const pcs = S.pieces.length ? S.pieces.map(k => `<li><b>${esc(PIECES[k].t)}</b> · ${esc(PIECES[k].p)}</li>`).join("") : `<li>찾은 조각이 없다. 다음 판에는 마을을 둘러보자.</li>`;
       return `<div class="eyebrow">${S.name ? esc(S.name) + "의 " : ""}결말</div>
         <h2 class="end-title">${esc(e.title)}</h2>
         ${rankCardHTML()}
-        ${isPerfect() ? `<div class="reward on"><div class="eyebrow">숨은 보상이 열렸어요</div><h3>「봄·봄」 노래</h3><p>눈치를 모두 한 번에 맞히고 원작 조각까지 모두 모았어요. 봉필이 속을 꿰뚫은 독자에게 주는 선물이에요.</p><a class="btn" href="${SONG_URL}" target="_blank" rel="noopener">노래 들으러 가기</a></div>` : ""}
+        ${isPerfect() ? `<div class="reward on"><div class="eyebrow">숨은 보상이 열렸어요</div><h3>「봄·봄」 노래</h3><p>눈치를 모두 맞히고 원작 조각까지 모두 모았어요. 봉필이 속을 꿰뚫은 독자에게 주는 선물이에요.</p><button class="btn" type="button" id="song-btn">▶ 노래 다시 듣기</button></div>` : ""}
         <div class="notes"><div class="note"><span class="t">이 결말 읽기</span><p>${esc(e.note)}</p></div><div class="note"><span class="t">장인님은 왜</span><p>${esc(simLine)}</p></div></div>
         <div class="stats">
-          <div class="stat"><div class="k">한 번에 맞힌 눈치</div><div class="n">${S.nunchi} / ${TOTAL_Q}</div><div class="s">${grade(S.nunchi)}</div></div>
+          <div class="stat"><div class="k">맞힌 눈치</div><div class="n">${S.nunchi} / ${TOTAL_Q}</div><div class="s">${grade(S.nunchi)}</div></div>
           <div class="stat"><div class="k">원작과 같은 선택</div><div class="n">${S.origCount} / ${NS}</div><div class="s">원작의 '나'와 얼마나 닮았나</div></div>
           <div class="stat"><div class="k">원작 조각</div><div class="n">${S.pieces.length} / ${PIECE_N}</div><div class="s">마을에서 찾은 단서</div></div>
         </div>
         ${isPerfect() ? "" : `<div class="reward"><div class="eyebrow">숨은 보상 · 잠김</div><p>눈치 ${S.nunchi}/${TOTAL_Q}, 원작 조각 ${S.pieces.length}/${PIECE_N}. 모두 채우면 「봄·봄」 노래가 열려요. 다시 하기로 도전해 보세요.</p></div>`}
         <div class="log"><table><thead><tr><th>장면</th><th>나의 선택</th><th>눈치</th></tr></thead><tbody>${rows}
-          <tr><td>이야기의 순서</td><td>원작의 구성</td><td class="${bOk ? "y" : "n2"}"><b>${bOk ? "한 번에" : (S.bonusTries + 1) + "번 만에"}</b></td></tr></tbody></table></div>
+          <tr><td>이야기의 순서</td><td>원작의 구성</td><td class="${bOk ? "y" : "n2"}"><b>${bOk ? "적중" : "빗나감"}</b></td></tr></tbody></table></div>
+        <div class="row"><button class="btn ghost" type="button" id="review-btn">눈치 문제 해설 다시 보기</button></div>
         <div class="pieces"><h3>모은 원작 조각</h3><ul>${pcs}</ul></div>
         <div class="discuss"><h3>함께 이야기해 볼 것</h3><ol>
           <li>'나', 장인, 점순이는 각각 무엇 때문에 갈등할까?</li>
@@ -2006,12 +2105,11 @@ html { touch-action: manipulation; }
     return "";
   }
 
-  function tryLine() { const n = (S.tries || []).length; return n ? `틀린 답은 지워졌어요. 지금까지 +${fmt(n * PEN_TRY)}` : `작품을 떠올려 고르세요. 틀리면 ${PEN_TRY}초가 늘고 다시 고를 수 있어요.`; }
-  function hintBox(h) { return (S.tries || []).length && h ? `<p class="hintbox"><b>힌트</b>${esc(h)}</p>` : ""; }
   function choiceBtns(opts, kind) {
-    const tr = S.tries || [], ans = kind === "bonus" ? BONUS.answer : SCENES[S.sc].answer;
-    return opts.map((o, i) => { const x = tr.includes(i), pk = S.peek && i === ans; return `<button class="choice${x ? " struck" : ""}${pk ? " peek" : ""}" type="button" data-${kind}="${i}"${x ? " disabled aria-disabled=\"true\"" : ""}><span class="mk">${x ? "✕" : NUM[i]}</span><span class="tx">${esc(o)}${pk ? ` <em class="peek-tag">정답</em>` : ""}</span></button>`; }).join("");
+    const ans = kind === "bonus" ? BONUS.answer : SCENES[S.sc].answer, lk = S.locked && S.locked[kind === "bonus" ? "b" : S.sc];
+    return opts.map((o, i) => { const pk = S.peek && i === ans; return `<button class="choice${pk ? " peek" : ""}" type="button" data-${kind}="${i}"${lk != null ? " disabled" : ""}><span class="mk">${NUM[i]}</span><span class="tx">${esc(o)}${pk ? ` <em class="peek-tag">정답</em>` : ""}</span></button>`; }).join("");
   }
+  const ONE_SHOT = `한 번만 고를 수 있어요. 틀리면 기록에 ${PEN_WRONG / 60}분이 더해져요.`;
   function dockHTML() {
     const m = S.mode;
     if (m === "free") {
@@ -2036,13 +2134,12 @@ html { touch-action: manipulation; }
     if (m === "predict") {
       const D = SCENES[S.sc];
       return `<div class="dlg static"><div class="portrait">${portrait(D.predWho, "normal", true)}</div><div>
-        <p class="ask">눈치 보기 · ${esc(D.q)}<small>${tryLine()}</small></p>
-        ${hintBox(D.hint)}
+        <p class="ask">눈치 보기 · ${esc(D.q)}<small>${S.locked && S.locked[S.sc] != null ? "이미 고른 답이 있어요. 그대로 이어집니다." : ONE_SHOT}</small></p>
         <div class="choices">${choiceBtns(D.opts, "pred")}</div></div></div>`;
     }
     if (m === "verdict") {
-      const D = SCENES[S.sc], ok = !S.lastTries;
-      return `<div class="verdict ${ok ? "ok" : "late"}"><span class="v">${ok ? "눈치가 맞았다! 한 번에 맞혔어요" : esc(triesNote(S.lastTries))}</span><p>정답 ${NUM[D.answer]} ${esc(D.opts[D.answer])}</p></div>
+      const D = SCENES[S.sc], ok = S.pred === D.answer;
+      return `<div class="verdict ${ok ? "ok" : "bad"}"><span class="v">${ok ? "눈치가 맞았다!" : `눈치가 빗나갔다…… · 기록 +${PEN_WRONG / 60}분`}</span>${ok ? "" : `<p>내가 고른 답 ${NUM[S.pred]} ${esc(D.opts[S.pred])}</p>`}<p>정답 ${NUM[D.answer]} ${esc(D.opts[D.answer])}</p>${ok ? "" : `<p class="why">${esc(D.explain)}</p>`}</div>
         ${ok ? fxChips(null, `<span class="chip up">배짱 +${S.lastBonus}</span>`) : ""}
         <div class="row"><button class="btn" type="button" id="cont-btn">무슨 일이 벌어지는지 보기</button></div>`;
     }
@@ -2107,9 +2204,13 @@ html { touch-action: manipulation; }
     on("cont-btn", afterVerdict);
     sheetEl.querySelectorAll("[data-pend]").forEach(b => b.addEventListener("click", () => previewEnding(b.dataset.pend)));
     on("pview-out", endPreview);
+    on("song-btn", openSong);
+    on("review-btn", () => { R.review = true; renderUI(); sheetEl.scrollTop = 0; });
+    on("review-close", () => { R.review = false; renderUI(); });
     on("tplay-btn", () => teacherPlay(false));
-    on("tquit-btn", () => { S = fresh(); R.help = false; R.partner = null; R.rank = null; setupScene(0); P.x = 2.5; P.z = 0; P.path = []; R.view = "teacher"; R.teacherTab = "play"; renderHUD(); renderUI(); });
+    on("tquit-btn", () => { stopAuto(); closeSong(); R.review = false; S = fresh(); R.help = false; R.partner = null; R.rank = null; setupScene(0); P.x = 2.5; P.z = 0; P.path = []; R.view = "teacher"; R.teacherTab = "play"; renderHUD(); renderUI(); });
     on("tpeek-btn", () => teacherPlay(true));
+    on("tauto-btn", autoDemo);
     const mb = $("mash-btn");
     if (mb) { mb.addEventListener("pointerdown", ev => { ev.preventDefault(); mashTap(); }); mb.addEventListener("click", ev => { if (ev.detail === 0) mashTap(); }); }
     on("sc-btn", endScene);
@@ -2118,10 +2219,10 @@ html { touch-action: manipulation; }
       const e = ending(); S.endingKey = e.key;
       const p = T(400, 340); P.x = p.x; P.z = p.z; P.lie = false; P.path = [];
       if (ENT.jangin && ENT.jangin.active) R.partner = "jangin";
-      renderHUD(); play(e.lines, () => { R.partner = null; S.mode = "final"; renderHUD(); renderUI(); submitRun(); if (isPerfect() && !R.celebrated) { R.celebrated = true; sfx("fanfare"); toast("숨은 보상이 열렸어요! 「봄·봄」 노래를 들어 보세요", 4500); for (let q = 0; q < 3; q++) setTimeout(() => dust(P.x, P.z, ["#EE719F", "#F7B5CC", "#F2D04E", "#FFFFFF"], 24, true), q * 350); } });
+      renderHUD(); play(e.lines, () => { R.partner = null; S.mode = "final"; renderHUD(); renderUI(); submitRun(); if (isPerfect() && !R.celebrated) { R.celebrated = true; sfx("fanfare"); toast("숨은 보상이 열렸어요! 「봄·봄」 노래가 시작돼요", 3500); for (let q = 0; q < 3; q++) setTimeout(() => dust(P.x, P.z, ["#EE719F", "#F7B5CC", "#F2D04E", "#FFFFFF"], 24, true), q * 350); setTimeout(openSong, 1600); } });
     });
-    on("again-btn", () => { if (!S.teacher) clearSave(); S = keepWho(); S.tips = false; R.rank = null; R.celebrated = false; startScene(0); });
-    on("home-btn", () => { if (!S.teacher) clearSave(); S = keepWho(); R.rank = null; R.celebrated = false; setupScene(0); P.x = 2.5; P.z = 0; renderHUD(); renderUI(); });
+    on("again-btn", () => { closeSong(); R.review = false; if (!S.teacher) clearSave(); S = keepWho(); S.tips = false; R.rank = null; R.celebrated = false; startScene(0); });
+    on("home-btn", () => { closeSong(); R.review = false; if (!S.teacher) clearSave(); S = keepWho(); R.rank = null; R.celebrated = false; setupScene(0); P.x = 2.5; P.z = 0; renderHUD(); renderUI(); });
   }
 
   /* ================= 입력 ================= */
@@ -2243,7 +2344,7 @@ html { touch-action: manipulation; }
     const real = last ? (ts - last) / 1000 : 0, dt = Math.min(0.05, real); last = ts;
     if (S.mode !== "title" && S.mode !== "final" && !S.submitted && !R.preview) {
       S.playMs = (S.playMs || 0) + Math.min(real, 1) * 1000;
-      const sec = Math.floor(S.playMs / 1000);
+      const sec = Math.floor(S.playMs / 1000) + penSec();
       if (sec !== R.secShown) { R.secShown = sec; const el = $("hud-time"); if (el) el.textContent = fmt(sec); }
     }
     update(dt); updateCamera(dt); applyLight(dt);
